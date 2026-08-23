@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "incident-response-agent"
+name = "autonomous-maintenance-window"
 version = "0.1.0"
-description = "Autonomous IT incident response workflow for All Things Agentic 2026"
+description = "Evidence-gated autonomous maintenance for All Things Agentic 2026"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.116,<1",

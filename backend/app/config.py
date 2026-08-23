@@ -15,12 +15,12 @@ class Settings(BaseSettings):
     google_cloud_location: str = "global"
     gemini_model: str = "gemini-3.5-flash"
     firestore_database: str = "(default)"
-    pubsub_topic: str = "incident-events"
-    pubsub_subscription: str = "incident-worker"
+    pubsub_topic: str = "maintenance-events"
+    pubsub_subscription: str = "maintenance-worker"
+    demo_step_delay_seconds: float = 0.0
     cors_origins: str = "http://localhost:5173"
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

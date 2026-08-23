@@ -8,13 +8,17 @@ class PubSubPublisher:
         self.publisher = pubsub_v1.PublisherClient()
         self.topic_path = self.publisher.topic_path(project, topic)
 
-    def publish(self, incident_id: str) -> str:
-        payload = json.dumps({"incident_id": incident_id}).encode()
+    def publish(self, maintenance_id: str, event_id: str) -> str:
+        payload = json.dumps({
+            "maintenance_id": maintenance_id,
+            "event_id": event_id,
+        }).encode()
         future = self.publisher.publish(
             self.topic_path,
             payload,
-            incident_id=incident_id,
-            event_type="incident.created",
+            maintenance_id=maintenance_id,
+            event_id=event_id,
+            event_type="maintenance.created",
         )
         return future.result(timeout=15)
 

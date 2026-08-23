@@ -1,231 +1,443 @@
 from __future__ import annotations
 
+import asyncio
 from abc import ABC, abstractmethod
+from typing import Any
 
-from app.models import AgentEvent, HealthState, Incident, IncidentStatus
-from app.policy import ActionPolicy, PolicyDecision
+from app.models import (
+    ALLOWED_TRANSITIONS,
+    GateDecision,
+    GateOutcome,
+    MaintenanceEvent,
+    MaintenanceRun,
+    MaintenanceStatus,
+    PlanStep,
+    StepStatus,
+)
+from app.policy import EvidenceGate
 from app.repository import Repository
 from app.simulator import Simulator
-from app.tools import IncidentTools
+from app.tools import MaintenanceTools
 
 
-class AgentRuntime(ABC):
+class Planner(ABC):
     @abstractmethod
-    async def run(self, incident_id: str) -> None: ...
+    async def create_plan(
+        self, run: MaintenanceRun, tools: MaintenanceTools
+    ) -> tuple[list[PlanStep], str]: ...
+
+    @abstractmethod
+    async def replan(
+        self, run: MaintenanceRun, observation: dict[str, Any], tools: MaintenanceTools
+    ) -> str: ...
 
 
-class LocalRuleAgent(AgentRuntime):
-    """Deterministic offline runtime for tests; production uses AdkAgentRuntime."""
+class LocalPlanner(Planner):
+    """Deterministic planner used by tests; production swaps in the ADK planner."""
 
-    def __init__(self, simulator: Simulator, repository: Repository, policy: ActionPolicy) -> None:
-        self.simulator = simulator
-        self.repository = repository
-        self.policy = policy
+    async def create_plan(
+        self, run: MaintenanceRun, tools: MaintenanceTools
+    ) -> tuple[list[PlanStep], str]:
+        plan = [
+            PlanStep(order=1, target="web01", action="rolling_update",
+                     objective="Drain, update, verify, and restore WEB01"),
+            PlanStep(order=2, target="web02", action="rolling_update",
+                     objective="Update WEB02 only after WEB01 is verified", depends_on=["web01"]),
+            PlanStep(order=3, target="database", action="database_maintenance",
+                     objective="Run approved database maintenance only with full redundancy",
+                     depends_on=["web01", "web02"]),
+            PlanStep(order=4, target="report", action="create_report",
+                     objective="Persist final evidence and human follow-up"),
+        ]
+        return plan, "Rolling web changes minimize risk; database work remains evidence-gated."
 
-    def event(self, incident: Incident, event_type: str, summary: str, **data: object) -> None:
-        self.repository.append_event(
-            AgentEvent(
-                incident_id=incident.id,
-                event_type=event_type,
-                summary=summary,
-                data=dict(data),
+    async def replan(
+        self, run: MaintenanceRun, observation: dict[str, Any], tools: MaintenanceTools
+    ) -> str:
+        if observation.get("type") == "verification_failure":
+            return (
+                f"{observation['target']} failed functional verification. Rollback is the safest "
+                "eligible action; later database work must be re-evaluated."
             )
+        return (
+            "Database maintenance is deferred because target-version redundancy is not satisfied "
+            "after the verified rollback."
         )
 
-    async def run(self, incident_id: str) -> None:
-        incident = self.repository.get_incident(incident_id)
-        if not incident or incident.status not in {IncidentStatus.QUEUED, IncidentStatus.FAILED}:
-            return
-        tools = IncidentTools(self.simulator, self.repository, self.policy).bind(incident.id)
-        try:
-            incident.status = IncidentStatus.INVESTIGATING
-            self.repository.save_incident(incident)
-            self.event(incident, "decision", "Agent started autonomous investigation")
 
-            health = tools.get_service_health(incident.service_id)
-            logs = tools.get_recent_logs(incident.service_id)
-            metrics = tools.get_metrics(incident.service_id)
-            dependencies = tools.get_dependency_health(incident.service_id)
-            incident.tools_used += [
-                "get_service_health", "get_recent_logs", "get_metrics", "get_dependency_health"
-            ]
-            incident.evidence = [
-                f"Health: {health['health']}",
-                f"Error rate: {metrics['error_rate']}%",
-                *logs["logs"],
-                f"Dependencies: {dependencies}",
-            ]
+class AdkPlanner(Planner):
+    """Gemini/ADK planner: probabilistic planning, deterministic execution authority."""
 
-            service = self.simulator.get(incident.service_id)
-            if service.fault == "worker_deadlock":
-                incident.probable_cause = "Stateless web worker deadlock"
-                tools.search_runbooks("worker deadlock")
-                tools.search_previous_incidents("worker deadlock")
-                incident.tools_used += ["search_runbooks", "search_previous_incidents"]
-                decision = self.policy.evaluate(
-                    "restart_stateless_service", service_id=incident.service_id
-                )
-                self.event(
-                    incident,
-                    "policy_check",
-                    f"Policy check: restart {decision.decision}",
-                    reason=decision.reason,
-                )
-                if decision.decision != PolicyDecision.ALLOW:
-                    raise PermissionError(decision.reason)
-                incident.status = IncidentStatus.REMEDIATING
-                self.repository.save_incident(incident)
-                tools.restart_service(incident.service_id)
-                incident.tools_used.append("restart_service")
-                incident.actions.append(f"Restarted {incident.service_id}")
-                incident.status = IncidentStatus.VERIFYING
-                self.repository.save_incident(incident)
-                verification = tools.verify_service_health(incident.service_id)
-                incident.tools_used.append("verify_service_health")
-                if not verification["healthy"]:
-                    raise RuntimeError("Post-remediation verification failed")
-                incident.verification = "Service healthy after restart"
-                incident.status = IncidentStatus.RESOLVED
-                self.repository.save_incident(incident)
-                report = {
-                    "outcome": "resolved_automatically",
-                    "probable_cause": incident.probable_cause,
-                    "evidence": incident.evidence,
-                    "actions": incident.actions,
-                    "verification": incident.verification,
-                }
-                tools.create_incident_report(report)
-                incident.tools_used.append("create_incident_report")
-                self.event(incident, "result", "Incident resolved automatically")
-            elif service.fault == "data_corruption":
-                incident.probable_cause = "Possible database data corruption"
-                runbook = tools.search_runbooks("checksum data corruption")
-                incident.tools_used.append("search_runbooks")
-                decision = self.policy.evaluate("modify_database_records", service_id="database")
-                self.event(
-                    incident,
-                    "policy_check",
-                    "Policy blocked destructive database remediation",
-                    reason=decision.reason,
-                )
-                escalation = {
-                    "severity": "critical",
-                    "reason": decision.reason,
-                    "evidence": incident.evidence,
-                    "recommended_next_steps": runbook["matches"],
-                }
-                tools.escalate_incident(escalation)
-                incident.tools_used.append("escalate_incident")
-                incident.escalation = escalation
-                incident.status = IncidentStatus.ESCALATED
-                self.repository.save_incident(incident)
-                self.event(incident, "result", "Incident escalated without destructive action")
-            else:
-                raise RuntimeError("No safe remediation strategy matched the observed evidence")
-        except Exception as exc:
-            incident.status = IncidentStatus.FAILED
-            self.repository.save_incident(incident)
-            self.repository.append_event(
-                AgentEvent(
-                    incident_id=incident.id,
-                    event_type="error",
-                    summary=f"Agent workflow failed: {exc}",
-                    status="error",
-                )
-            )
-            raise
-
-
-class AdkAgentRuntime(AgentRuntime):
-    """Genuine Google ADK runtime backed by Gemini on Vertex AI."""
-
-    def __init__(
-        self,
-        simulator: Simulator,
-        repository: Repository,
-        policy: ActionPolicy,
-        model: str,
-    ) -> None:
-        self.simulator = simulator
-        self.repository = repository
-        self.policy = policy
+    def __init__(self, model: str) -> None:
         self.model = model
 
-    async def run(self, incident_id: str) -> None:
+    async def _run_planner(
+        self,
+        run: MaintenanceRun,
+        tools: MaintenanceTools,
+        objective: str,
+        *,
+        require_steps: bool,
+    ) -> tuple[list[PlanStep], str]:
         from google.adk import Agent, Runner
         from google.adk.sessions import InMemorySessionService
         from google.genai import types
 
-        incident = self.repository.get_incident(incident_id)
-        if not incident or incident.status != IncidentStatus.QUEUED:
-            return
-        incident.status = IncidentStatus.INVESTIGATING
-        self.repository.save_incident(incident)
-        tools = IncidentTools(self.simulator, self.repository, self.policy).bind(incident.id)
-        root_agent = Agent(
-            name="incident_response_agent",
+        captured: dict[str, Any] = {}
+
+        def submit_maintenance_plan(steps: list[dict[str, Any]], summary: str) -> dict[str, Any]:
+            """Submit the concise structured plan/replan after gathering sufficient evidence."""
+            captured["steps"] = steps
+            captured["summary"] = summary
+            return {"accepted": True, "step_count": len(steps)}
+
+        instruction = (
+            "You are the planner/replanner for 03:17 Autonomous Maintenance Window. Use read tools "
+            "when useful. Gemini reasons and proposes; deterministic Evidence Gates authorize all "
+            "changes. Never expose private reasoning. Submit concise observable steps with exactly "
+            "these action names when applicable: rolling_update, database_maintenance, create_report. "
+            "Targets must be web01, web02, database, or report. Call submit_maintenance_plan exactly "
+            "once. A failed verification requires rollback and reevaluation of later steps."
+        )
+        agent = Agent(
+            name="maintenance_planner",
             model=self.model,
-            instruction=(
-                "You autonomously resolve simulated IT incidents. Investigate with tools, correlate "
-                "evidence, search runbooks/history, and take only policy-enforced actions. Stateless "
-                "services may be restarted. Never attempt destructive database/security actions; call "
-                "escalate_incident with evidence instead. Always verify remediation and call "
-                "create_incident_report or escalate_incident. Return concise action summaries only."
-            ),
+            instruction=instruction,
             tools=[
+                tools.get_change_request,
+                tools.get_topology,
                 tools.get_service_health,
-                tools.get_recent_logs,
                 tools.get_metrics,
-                tools.get_dependency_health,
+                tools.get_recent_logs,
                 tools.search_runbooks,
-                tools.search_previous_incidents,
-                tools.restart_service,
-                tools.verify_service_health,
-                tools.create_incident_report,
-                tools.escalate_incident,
+                tools.search_maintenance_history,
+                tools.check_capacity,
+                submit_maintenance_plan,
             ],
         )
         session_service = InMemorySessionService()
-        app_name = "incident_response"
-        user_id = "system"
+        app_name = "autonomous_maintenance"
+        session_id = f"{run.id}-{len(run.decision_summaries)}"
         await session_service.create_session(
-            app_name=app_name, user_id=user_id, session_id=incident.id
+            app_name=app_name, user_id="system", session_id=session_id
         )
-        runner = Runner(agent=root_agent, app_name=app_name, session_service=session_service)
-        prompt = (
-            f"Incident {incident.id}: {incident.trigger}. Affected service: {incident.service_id}. "
-            "Complete the workflow now without waiting for an operator."
-        )
-        try:
-            async for event in runner.run_async(
-                user_id=user_id,
-                session_id=incident.id,
-                new_message=types.Content(role="user", parts=[types.Part(text=prompt)]),
-            ):
-                if event.is_final_response() and event.content:
-                    text = " ".join(part.text for part in event.content.parts if part.text)
-                    self.repository.append_event(
-                        AgentEvent(
-                            incident_id=incident.id,
-                            event_type="decision",
-                            summary=text[:500],
-                        )
-                    )
-            incident = self.repository.get_incident(incident.id) or incident
-            if incident.escalation:
-                incident.status = IncidentStatus.ESCALATED
-            elif incident.report:
-                service = self.simulator.get(incident.service_id)
-                incident.status = (
-                    IncidentStatus.RESOLVED
-                    if service.health == HealthState.HEALTHY
-                    else IncidentStatus.FAILED
-                )
-            else:
-                incident.status = IncidentStatus.FAILED
-            self.repository.save_incident(incident)
-        except Exception:
-            incident.status = IncidentStatus.FAILED
-            self.repository.save_incident(incident)
-            raise
+        runner = Runner(agent=agent, app_name=app_name, session_service=session_service)
+        async for _ in runner.run_async(
+            user_id="system",
+            session_id=session_id,
+            new_message=types.Content(role="user", parts=[types.Part(text=objective)]),
+        ):
+            pass
+        if "summary" not in captured or (require_steps and not captured.get("steps")):
+            raise RuntimeError("Gemini planner did not submit a valid structured plan")
+        allowed = {
+            ("web01", "rolling_update"),
+            ("web02", "rolling_update"),
+            ("database", "database_maintenance"),
+            ("report", "create_report"),
+        }
+        steps: list[PlanStep] = []
+        for index, item in enumerate(captured.get("steps", []), 1):
+            target = str(item.get("target", ""))
+            action = str(item.get("action", ""))
+            if (target, action) not in allowed:
+                raise ValueError(f"Planner proposed unsupported step: {target}/{action}")
+            steps.append(PlanStep(
+                order=index,
+                target=target,
+                action=action,
+                objective=str(item.get("objective", f"Execute {action} on {target}")),
+            ))
+        return steps, str(captured["summary"])
 
+    async def create_plan(
+        self, run: MaintenanceRun, tools: MaintenanceTools
+    ) -> tuple[list[PlanStep], str]:
+        objective = (
+            f"Create the initial executable plan for maintenance {run.id}. Request: {run.request}. "
+            "Discover topology and relevant runbooks first. Preserve availability and verify every step."
+        )
+        last_error: Exception | None = None
+        for _ in range(2):
+            try:
+                return await self._run_planner(run, tools, objective, require_steps=True)
+            except (RuntimeError, ValueError) as exc:
+                last_error = exc
+        raise RuntimeError(f"Gemini plan failed validation after bounded retries: {last_error}")
+
+    async def replan(
+        self, run: MaintenanceRun, observation: dict[str, Any], tools: MaintenanceTools
+    ) -> str:
+        objective = (
+            f"Replan maintenance {run.id} after this observable result: {observation}. "
+            "Submit an empty steps list if no new executable step is safe, plus a concise summary."
+        )
+        _, summary = await self._run_planner(run, tools, objective, require_steps=False)
+        return summary
+
+
+class MaintenanceAgent(ABC):
+    @abstractmethod
+    async def run(self, maintenance_id: str) -> None: ...
+
+
+class SafeMaintenanceAgent(MaintenanceAgent):
+    def __init__(
+        self,
+        simulator: Simulator,
+        repository: Repository,
+        gate: EvidenceGate,
+        planner: Planner,
+        step_delay_seconds: float = 0.0,
+    ) -> None:
+        self.simulator = simulator
+        self.repository = repository
+        self.gate = gate
+        self.planner = planner
+        self.step_delay_seconds = step_delay_seconds
+
+    async def pause(self) -> None:
+        if self.step_delay_seconds > 0:
+            await asyncio.sleep(self.step_delay_seconds)
+
+    def event(
+        self,
+        run: MaintenanceRun,
+        event_type: str,
+        summary: str,
+        *,
+        target: str | None = None,
+        status: str = "success",
+        evidence: dict[str, Any] | None = None,
+    ) -> None:
+        self.repository.append_event(MaintenanceEvent(
+            maintenance_id=run.id,
+            event_type=event_type,
+            target=target,
+            summary=summary,
+            status=status,
+            evidence=evidence or {},
+        ))
+
+    def save(self, run: MaintenanceRun) -> None:
+        self.repository.save_run(run)
+
+    def sync_gate(self, run: MaintenanceRun, result: dict[str, Any]) -> None:
+        decision = GateDecision.model_validate(result)
+        if not any(existing.evaluated_at == decision.evaluated_at for existing in run.gate_decisions):
+            run.gate_decisions.append(decision)
+
+    async def _execute_web_step(
+        self, run: MaintenanceRun, step: PlanStep, tools: MaintenanceTools
+    ) -> None:
+        target = step.target
+        step.status = StepStatus.IN_PROGRESS
+        self.save(run)
+        self.event(run, "objective", f"Starting rolling maintenance on {target.upper()}", target=target)
+
+        drain_gate = tools.evaluate_evidence("drain_node", target)
+        self.sync_gate(run, drain_gate)
+        if drain_gate["outcome"] != GateOutcome.PASS:
+            step.status = StepStatus.BLOCKED
+            step.decision_summary = drain_gate["summary"]
+            self.save(run)
+            return
+        tools.drain_node(target)
+        run.actions_executed.append(f"drain_node:{target}")
+        await self.pause()
+        tools.create_rollback_point(target)
+        run.actions_executed.append(f"create_rollback_point:{target}")
+        change_gate = tools.evaluate_evidence("apply_web_change", target)
+        self.sync_gate(run, change_gate)
+        if change_gate["outcome"] != GateOutcome.PASS:
+            step.status = StepStatus.BLOCKED
+            self.save(run)
+            return
+        tools.apply_maintenance(target)
+        await self.pause()
+        tools.restart_service(target)
+        run.actions_executed.extend([f"apply_maintenance:{target}", f"restart_service:{target}"])
+
+        run.transition(MaintenanceStatus.VERIFYING)
+        self.save(run)
+        health = tools.run_health_check(target)
+        await self.pause()
+        synthetic = tools.run_synthetic_test(target)
+        await self.pause()
+        self.event(
+            run,
+            "verification",
+            f"{target.upper()} functional verification "
+            f"{'passed' if synthetic['passed'] else 'failed'}",
+            target=target,
+            status="success" if synthetic["passed"] else "failed",
+            evidence={"health": health, "synthetic": synthetic},
+        )
+        if synthetic["passed"]:
+            tools.restore_node_to_pool(target)
+            await self.pause()
+            run.actions_executed.append(f"restore_node_to_pool:{target}")
+            step.status = StepStatus.COMPLETED
+            step.decision_summary = "Update verified and node restored to service."
+            run.transition(MaintenanceStatus.EXECUTING)
+            self.save(run)
+            return
+
+        step.status = StepStatus.FAILED
+        run.transition(MaintenanceStatus.ROLLING_BACK)
+        self.save(run)
+        logs = tools.get_recent_logs(target)
+        metrics = tools.get_metrics(target)
+        observation = {
+            "type": "verification_failure",
+            "target": target,
+            "synthetic": synthetic,
+            "logs": logs,
+            "metrics": metrics,
+        }
+        summary = await self.planner.replan(run, observation, tools)
+        run.decision_summaries.append(summary)
+        self.event(run, "replan", summary, target=target, evidence=observation)
+        rollback_gate = tools.evaluate_evidence("rollback", target)
+        self.sync_gate(run, rollback_gate)
+        if rollback_gate["outcome"] != GateOutcome.PASS:
+            raise PermissionError("Rollback became ineligible after failed verification")
+        tools.rollback_change(target)
+        await self.pause()
+        verification = tools.verify_rollback(target)
+        await self.pause()
+        if not verification["passed"]:
+            raise RuntimeError("Rollback verification failed")
+        step.status = StepStatus.ROLLED_BACK
+        step.decision_summary = "Failed update rolled back; previous version verified healthy."
+        run.rollback_information.append({
+            "target": target,
+            "reason": synthetic["reason"],
+            "verification": verification,
+        })
+        run.actions_executed.append(f"rollback_change:{target}")
+        self.event(run, "rollback", f"{target.upper()} rollback verified", target=target,
+                   evidence=verification)
+        run.transition(MaintenanceStatus.REPLANNING)
+        self.save(run)
+        run.transition(MaintenanceStatus.EXECUTING)
+        self.save(run)
+
+    def _build_report(self, run: MaintenanceRun) -> dict[str, Any]:
+        topology = self.simulator.topology()
+        unresolved = [
+            {"target": step.target, "status": step.status, "reason": step.decision_summary}
+            for step in run.plan
+            if step.status in {StepStatus.ROLLED_BACK, StepStatus.DEFERRED, StepStatus.BLOCKED}
+        ]
+        return {
+            "maintenance_id": run.id,
+            "original_request": run.request,
+            "started_at": run.started_at,
+            "completed_at": run.completed_at,
+            "outcome": "completed_with_warnings",
+            "planned_targets": [step.target for step in run.plan],
+            "dependency_graph": run.dependency_graph,
+            "initial_evidence": [item.model_dump(mode="json") for item in run.initial_evidence],
+            "executed_actions": run.actions_executed,
+            "verification_results": [
+                event.model_dump(mode="json")
+                for event in self.repository.list_events(run.id)
+                if event.event_type in {"verification", "rollback"}
+            ],
+            "rollback_information": run.rollback_information,
+            "blocked_operations": run.blocked_operations,
+            "evidence_gate_decisions": [gate.model_dump(mode="json") for gate in run.gate_decisions],
+            "final_topology_state": topology,
+            "decision_summaries": run.decision_summaries,
+            "unresolved_items": unresolved,
+            "recommended_human_follow_up": [
+                "Review WEB02 configuration compatibility before retrying its update.",
+                "Reschedule database maintenance after both web nodes run the target version.",
+            ],
+            "service_availability_preserved": run.availability_preserved,
+            "human_interventions": run.human_interventions,
+        }
+
+    async def run(self, maintenance_id: str) -> None:
+        run = self.repository.get_run(maintenance_id)
+        if not run or run.status != MaintenanceStatus.RECEIVED:
+            return
+        tools = MaintenanceTools(self.simulator, self.repository, self.gate).bind(run.id)
+        try:
+            run.transition(MaintenanceStatus.PLANNING)
+            self.save(run)
+            self.event(run, "ingestion", "Approved change request ingested")
+            await self.pause()
+            topology = tools.get_topology()
+            tools.search_runbooks("rolling web update database maintenance")
+            tools.search_maintenance_history("web tier")
+            run.dependency_graph = {
+                node["id"]: node["dependencies"] for node in topology["nodes"]
+            }
+            plan, summary = await self.planner.create_plan(run, tools)
+            run.plan = plan
+            run.decision_summaries.append(summary)
+            self.event(run, "plan", "Structured maintenance plan created",
+                       evidence={"summary": summary,
+                                 "steps": [step.model_dump(mode="json") for step in plan]})
+            await self.pause()
+
+            run.transition(MaintenanceStatus.PREFLIGHT)
+            self.save(run)
+            preflight = tools.evaluate_evidence("maintenance_window", "infrastructure")
+            run = self.repository.get_run(run.id) or run
+            decision = run.gate_decisions[-1]
+            run.initial_evidence = decision.evidence
+            if preflight["outcome"] != GateOutcome.PASS:
+                run.transition(MaintenanceStatus.DEFERRED)
+                self.save(run)
+                return
+            tools.create_snapshot("database")
+            self.event(run, "preflight", "All pre-flight Evidence Gates passed",
+                       evidence=preflight)
+            await self.pause()
+            run.transition(MaintenanceStatus.READY)
+            run.transition(MaintenanceStatus.EXECUTING)
+            self.save(run)
+
+            for step in sorted(run.plan, key=lambda item: item.order):
+                if step.action == "rolling_update":
+                    await self._execute_web_step(run, step, tools)
+                elif step.action == "database_maintenance":
+                    database_gate = tools.evaluate_evidence("database_change", "database")
+                    run = self.repository.get_run(run.id) or run
+                    if database_gate["outcome"] != GateOutcome.PASS:
+                        run.transition(MaintenanceStatus.REPLANNING)
+                        self.save(run)
+                        summary = await self.planner.replan(
+                            run,
+                            {"type": "gate_rejection", "target": "database",
+                             "decision": database_gate},
+                            tools,
+                        )
+                        tools.defer_change("database", summary)
+                        run = self.repository.get_run(run.id) or run
+                        self.event(run, "evidence_gate", "Database maintenance blocked by Evidence Gate",
+                                   target="database", status="blocked", evidence=database_gate)
+                        await self.pause()
+                        run.transition(MaintenanceStatus.COMPLETED_WITH_WARNINGS)
+                        self.save(run)
+                    else:
+                        raise RuntimeError("Golden scenario expected database gate rejection")
+            run = self.repository.get_run(run.id) or run
+            for step in run.plan:
+                if step.action == "create_report":
+                    step.status = StepStatus.COMPLETED
+            self.save(run)
+            report = self._build_report(run)
+            tools.create_maintenance_report(report)
+            self.event(run, "result", "Maintenance window completed with verified rollback and deferral",
+                       evidence={"availability_preserved": True, "human_interventions": 0})
+        except Exception as exc:
+            current = self.repository.get_run(run.id) or run
+            if MaintenanceStatus.FAILED in ALLOWED_TRANSITIONS[current.status]:
+                current.transition(MaintenanceStatus.FAILED)
+            self.save(current)
+            self.event(current, "error", f"Maintenance workflow failed: {exc}", status="error")
+            raise
