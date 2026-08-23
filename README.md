@@ -2,7 +2,7 @@
 
 An autonomous IT incident response agent built for the **Google / Devpost All Things Agentic Hackathon 2026**, targeting **The Taskmaster** category.
 
-> Repository: `after-alert`. Product name: **AfterAlert**.
+> Repository: [Zachiran42/after-alert](https://github.com/Zachiran42/after-alert). Product name: **AfterAlert**.
 
 ## The problem
 
