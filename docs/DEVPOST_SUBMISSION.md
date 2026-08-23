@@ -8,7 +8,7 @@ IT teams lose valuable time repeating the same incident workflow: receive an ale
 
 ## What it does
 
-PROJECT_NAME_TBD is an event-driven autonomous IT incident response system. A service alert starts a background workflow. A Google ADK agent running Gemini 3.5 Flash inspects health, metrics, logs, dependencies, runbooks, and incident history through real tools. It chooses a remediation, passes it through a code-enforced action policy, performs permitted actions, verifies the outcome, and stores an auditable incident record.
+AfterAlert is an event-driven autonomous IT incident response system. A service alert starts a background workflow. A Google ADK agent running Gemini 3.5 Flash inspects health, metrics, logs, dependencies, runbooks, and incident history through real tools. It chooses a remediation, passes it through a code-enforced action policy, performs permitted actions, verifies the outcome, and stores an auditable incident record.
 
 The recoverable demonstration injects a deadlocked worker in a stateless web API. The agent independently investigates, restarts the service, verifies recovery, and records the result. The unsafe demonstration injects database checksum corruption. The agent preserves evidence, performs no database change, and creates a precise escalation.
 
@@ -56,6 +56,5 @@ Google ADK, Gemini 3.5 Flash, Vertex AI, Cloud Run, Firestore, Pub/Sub, Cloud Bu
 - [ ] `[VERIFY AFTER DEPLOYMENT]` Gemini tool calls appear in Vertex AI / application logs.
 - [ ] `[VERIFY AFTER DEPLOYMENT]` Firestore incident and event documents are visible.
 - [ ] `[VERIFY AFTER DEPLOYMENT]` Pub/Sub topic and push subscription deliver an event.
-- [ ] Replace `PROJECT_NAME_TBD` with the final human-selected name.
+- [x] Replace the placeholder with the human-selected name, AfterAlert.
 - [ ] Add repository, demo video, and optional article/social links.
-

@@ -58,7 +58,7 @@ export function App() {
 
   return <main>
     <header className="topbar">
-      <div className="brand"><div className="mark"><Activity size={20}/></div><div><strong>PROJECT_NAME_TBD</strong><span>Autonomous Incident Operations</span></div></div>
+      <div className="brand"><div className="mark"><Activity size={20}/></div><div><strong>AfterAlert</strong><span>Autonomous Incident Operations</span></div></div>
       <div className="runtime"><span className="live-dot"/> Agent online <code>{config?.model || 'connecting'}</code></div>
     </header>
 
@@ -103,4 +103,3 @@ export function App() {
     <footer><span>Google Cloud Run · Vertex AI · Firestore · Pub/Sub</span><span>Runtime: {config?.agent_runtime} / {config?.persistence_backend}</span></footer>
   </main>
 }
-

@@ -6,7 +6,7 @@ Target length: **3:55**. Rehearse with a clean demo state. Keep the Cloud Run da
 
 **Show:** Operations dashboard, all three services healthy.
 
-“Incident response is a repetitive workflow, but most automation either stops at recommendations or acts without a clear safety boundary. PROJECT_NAME_TBD is an autonomous responder that investigates, takes permitted actions, verifies the result, and creates an audit record—without waiting for a chat prompt.”
+“Incident response is a repetitive workflow, but most automation either stops at recommendations or acts without a clear safety boundary. AfterAlert is an autonomous responder that investigates, takes permitted actions, verifies the result, and creates an audit record—without waiting for a chat prompt.”
 
 ## 0:25–0:45 — Architecture
 
@@ -68,7 +68,7 @@ Never claim a screen proves Vertex usage if the model ID/request is not visible.
 
 ## 3:55–4:00 — Close
 
-“PROJECT_NAME_TBD turns an alert into a safe, verified outcome—not another message for an operator to process.”
+“AfterAlert turns an alert into a safe, verified outcome—not another message for an operator to process.”
 
 ## Recording checklist
 
@@ -79,4 +79,3 @@ Never claim a screen proves Vertex usage if the model ID/request is not visible.
 - [ ] Browser zoom makes incident text legible at 1080p.
 - [ ] Recording finishes below 4:00.
 - [ ] No secrets, emails, billing details, or unrelated project names are visible.
-

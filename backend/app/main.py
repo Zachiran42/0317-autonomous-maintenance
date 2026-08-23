@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="PROJECT_NAME_TBD API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="AfterAlert API", version="0.1.0", lifespan=lifespan)
 settings = get_settings()
 app.add_middleware(
     CORSMiddleware,

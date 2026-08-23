@@ -1,8 +1,8 @@
-# PROJECT_NAME_TBD
+# AfterAlert
 
 An autonomous IT incident response agent built for the **Google / Devpost All Things Agentic Hackathon 2026**, targeting **The Taskmaster** category.
 
-> Repository name: `all-things-agentic-2026`. The visible product name intentionally remains `PROJECT_NAME_TBD` until a human-selected name is chosen.
+> Repository: `after-alert`. Product name: **AfterAlert**.
 
 ## The problem
 

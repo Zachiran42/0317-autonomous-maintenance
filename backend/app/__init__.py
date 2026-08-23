@@ -1,2 +1,1 @@
-"""PROJECT_NAME_TBD incident response backend."""
-
+"""AfterAlert incident response backend."""
