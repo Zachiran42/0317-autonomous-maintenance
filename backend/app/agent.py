@@ -148,6 +148,13 @@ class AdkPlanner(Planner):
                 action=action,
                 objective=str(item.get("objective", f"Execute {action} on {target}")),
             ))
+        if require_steps and [(step.target, step.action) for step in steps] != [
+            ("web01", "rolling_update"),
+            ("web02", "rolling_update"),
+            ("database", "database_maintenance"),
+            ("report", "create_report"),
+        ]:
+            raise ValueError("Planner must preserve the approved rolling target order")
         return steps, str(captured["summary"])
 
     async def create_plan(

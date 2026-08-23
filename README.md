@@ -199,7 +199,7 @@ gcloud auth application-default login
 .\scripts\deploy.ps1 -ProjectId "YOUR_PROJECT_ID"
 ```
 
-The script enables the required APIs, creates Firestore and Pub/Sub resources when absent, deploys `autonomous-maintenance-0317` to Cloud Run, configures scale-to-zero with two maximum instances, creates/updates the push subscription, and prints the Cloud Run URL.
+The script enables the required APIs, creates Firestore and Pub/Sub resources when absent, deploys `autonomous-maintenance-0317` to Cloud Run, configures scale-to-zero with one maximum instance for deterministic simulator state, creates/updates the push subscription, and prints the Cloud Run URL.
 
 Cloud deployments should use a dedicated least-privilege service identity with Vertex AI User, Datastore User, Pub/Sub Publisher, and Pub/Sub Subscriber access. The current simple push endpoint is public for hackathon reproducibility; authenticated Pub/Sub push is the first production-hardening task.
 
@@ -284,4 +284,3 @@ Codex/GPT-5.6 assisted with development. Gemini is the submitted application's r
 ## License
 
 Add a human-selected open-source license before final Devpost submission.
-

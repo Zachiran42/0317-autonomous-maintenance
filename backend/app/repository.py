@@ -114,12 +114,11 @@ class FirestoreRepository(Repository):
         return event
 
     def list_events(self, maintenance_id: str) -> list[MaintenanceEvent]:
-        query = (
-            self.client.collection("maintenance_events")
-            .where("maintenance_id", "==", maintenance_id)
-            .order_by("timestamp")
+        query = self.client.collection("maintenance_events").where(
+            "maintenance_id", "==", maintenance_id
         )
-        return [MaintenanceEvent.model_validate(item.to_dict()) for item in query.stream()]
+        events = [MaintenanceEvent.model_validate(item.to_dict()) for item in query.stream()]
+        return sorted(events, key=lambda event: event.timestamp)
 
     def save_action(self, action: ActionExecution) -> ActionExecution:
         self.client.collection("action_executions").document(action.idempotency_key).set(
@@ -134,4 +133,3 @@ class FirestoreRepository(Repository):
     def clear(self) -> None:
         # Production reset restores simulator state but preserves the immutable audit trail.
         return None
-

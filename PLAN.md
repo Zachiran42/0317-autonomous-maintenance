@@ -33,7 +33,7 @@ The existing hackathon codebase was audited at commit `1adecd1` before migration
 - [x] Rewrite README and submission documents; add safety and migration notes.
 - [x] Build and smoke-test the final renamed Docker image.
 - [ ] Verify real Vertex AI, Firestore, Pub/Sub, and Cloud Run execution.
-- [ ] Rename GitHub repository to `0317-autonomous-maintenance` and push stable `main`.
+- [x] Rename GitHub repository to `0317-autonomous-maintenance`; stable push pending final checks.
 - [ ] Capture Google Cloud proof and record the four-minute video.
 - [ ] Add multimodal request ingestion only if all core proof is stable.
 

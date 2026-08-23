@@ -214,6 +214,7 @@ class MaintenanceRun(BaseModel):
             MaintenanceStatus.ESCALATED,
         }:
             self.completed_at = utcnow()
+            self.window_end = self.completed_at
 
 
 class CreateMaintenanceRequest(BaseModel):
@@ -228,4 +229,3 @@ class CreateMaintenanceRequest(BaseModel):
     )
     approved: bool = True
     event_id: str | None = None
-

@@ -56,7 +56,7 @@ Open `maintenance_runs`, `maintenance_events`, and `action_executions`. Show the
 
 Show preloaded screens quickly:
 
-1. **Cloud Run → autonomous-maintenance-0317:** green revision, service URL, min instances 0, max 2.
+1. **Cloud Run → autonomous-maintenance-0317:** green revision, service URL, min instances 0, max 1.
 2. **Logs Explorer:** structured event with maintenance ID and a Gemini planning/replanning summary.
 3. **Pub/Sub → maintenance-worker:** delivery activity and `/api/events/pubsub` endpoint.
 4. **Vertex AI monitoring/logs:** visible `gemini-3.5-flash` request evidence.
@@ -78,4 +78,3 @@ Do not claim Vertex proof unless the model/request is visible.
 - [ ] Firestore, Cloud Run, Pub/Sub, and Vertex proof tabs are prefiltered.
 - [ ] No emails, billing data, credentials, or unrelated project information is visible.
 - [ ] Recording ends before 4:00.
-
