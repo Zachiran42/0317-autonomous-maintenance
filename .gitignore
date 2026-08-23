@@ -1,0 +1,17 @@
+.env
+*.log
+*.py[cod]
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+node_modules/
+dist/
+*.tsbuildinfo
+.idea/
+.vscode/
+.DS_Store
+coverage.xml
+htmlcov/
+service-account*.json
+*credentials*.json
