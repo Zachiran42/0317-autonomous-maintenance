@@ -167,7 +167,7 @@ Escalation required: data deletion/modification, firewall changes, credential ch
 - Infrastructure is intentionally simulated; no production host or database is modified.
 - The local rule runtime is deterministic and exists for tests/demo rehearsal; only `AGENT_RUNTIME=adk` is hackathon production mode.
 - Real Vertex AI/Firestore/Pub/Sub execution and Cloud Run screenshots must be verified after deployment to the submitter's project.
-- The demo reset endpoint is disabled by the Firestore repository to prevent accidental deletion of production audit data.
+- Demo reset restores simulated service health but deliberately preserves the Firestore audit history.
 - Pub/Sub push is deployed to the public Cloud Run endpoint for simple reproducibility; production use should add authenticated push and operator authorization.
 
 ## Hackathon compliance
@@ -188,4 +188,3 @@ Codex/GPT-5.6 assisted with software development. The running application uses G
 ## License
 
 Add a human-selected license before making the submission repository public.
-

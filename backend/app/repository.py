@@ -102,5 +102,5 @@ class FirestoreRepository(Repository):
         return [AgentEvent.model_validate(item.to_dict()) for item in query.stream()]
 
     def clear(self) -> None:
-        raise RuntimeError("Production Firestore data cannot be cleared through the demo endpoint")
-
+        # Demo reset restores simulated services but deliberately preserves the production audit trail.
+        return None

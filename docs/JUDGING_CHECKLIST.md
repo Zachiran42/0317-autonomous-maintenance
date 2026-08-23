@@ -30,7 +30,7 @@
 - [x] Recoverable and unsafe buttons make the demo deterministic.
 - [x] Backend tests pass locally in Python 3.12 Docker.
 - [x] Frontend production build passes.
-- [ ] Complete and verify the full Docker image build.
+- [x] Complete and verify the full Docker image build and container smoke test.
 - [ ] Deploy and capture the public Cloud Run URL.
 - [ ] Capture visible Vertex AI, Firestore, and Pub/Sub proof.
 - [ ] Record and trim a sub-four-minute demo video.
@@ -48,4 +48,3 @@
 - [ ] Confirm official deadline/time zone and all current rules on submission day.
 - [ ] Publish optional technical article and social post only after the core submission is verified.
 - [ ] Consider an additional Google AI model only if it improves the workflow without demo risk.
-
