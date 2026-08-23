@@ -8,9 +8,9 @@ services:
       AGENT_RUNTIME: local
       PERSISTENCE_BACKEND: memory
       EVENT_BACKEND: local
+      DEMO_STEP_DELAY_SECONDS: "0.35"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/health')"]
       interval: 10s
       timeout: 3s
       retries: 5
-
