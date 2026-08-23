@@ -1,5 +1,5 @@
 {
-  "name": "incident-response-dashboard",
+  "name": "0317-autonomous-maintenance-dashboard",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -21,4 +21,3 @@
     "@types/react-dom": "latest"
   }
 }
-

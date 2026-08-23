@@ -1,11 +1,30 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, AlertTriangle, CheckCircle2, Database, Play, RotateCcw, Server, ShieldAlert, Zap } from 'lucide-react'
+import {
+  Activity, AlertTriangle, Check, CheckCircle2, ChevronRight, Clock3,
+  Database, GitBranch, Play, RefreshCw, RotateCcw, Server, ShieldCheck,
+  Undo2, X, Zap,
+} from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || ''
 
-type Service = { id: string; name: string; health: string; cpu_percent: number; error_rate: number; latency_ms: number; restart_count: number }
-type Incident = { id: string; service_id: string; scenario: string; trigger: string; status: string; probable_cause?: string; evidence: string[]; tools_used: string[]; actions: string[]; verification?: string; escalation?: Record<string, unknown>; created_at: string }
-type Event = { id: string; timestamp: string; event_type: string; summary: string; status: string; tool?: string }
+type Node = {
+  id: string; name: string; kind: string; health: string; state: string;
+  version: string; desired_version: string; in_load_balancer: boolean;
+  error_rate: number; latency_ms: number;
+}
+type Topology = { nodes: Node[]; edges: string[][] }
+type Evidence = { key: string; label: string; passed: boolean; observed: unknown; required: unknown }
+type Gate = { gate: string; target: string; outcome: 'pass' | 'fail'; summary: string; evidence: Evidence[] }
+type Step = { id: string; order: number; target: string; action: string; objective: string; status: string; decision_summary?: string }
+type Run = {
+  id: string; request: string; status: string; created_at: string; started_at?: string;
+  completed_at?: string; plan: Step[]; gate_decisions: Gate[]; human_interventions: number;
+  availability_preserved: boolean; report?: Record<string, unknown>;
+}
+type Event = {
+  id: string; timestamp: string; event_type: string; target?: string; summary: string;
+  status: string; tool?: string; evidence: Record<string, unknown>;
+}
 type Config = { agent_runtime: string; persistence_backend: string; event_backend: string; model: string }
 
 const fetchJson = async <T,>(path: string, init?: RequestInit): Promise<T> => {
@@ -14,92 +33,147 @@ const fetchJson = async <T,>(path: string, init?: RequestInit): Promise<T> => {
   return response.status === 204 ? (undefined as T) : response.json()
 }
 
-const statusLabel: Record<string, string> = {
-  queued: 'Queued', investigating: 'Investigating', remediating: 'Remediating',
-  verifying: 'Verifying', resolved: 'Resolved', escalated: 'Escalated', failed: 'Failed',
+const statusName: Record<string, string> = {
+  received: 'Received', planning: 'Planning', preflight: 'Pre-flight', ready: 'Ready',
+  executing: 'Executing', verifying: 'Verifying', rolling_back: 'Rolling back',
+  replanning: 'Replanning', deferred: 'Deferred', completed: 'Completed',
+  completed_with_warnings: 'Completed with warnings', failed: 'Failed', escalated: 'Escalated',
+}
+
+const stepIcon = (status: string) => {
+  if (status === 'completed') return <Check size={14}/>
+  if (status === 'rolled_back') return <Undo2 size={14}/>
+  if (status === 'deferred' || status === 'blocked') return <X size={14}/>
+  if (status === 'in_progress') return <RefreshCw size={14}/>
+  return <ChevronRight size={14}/>
+}
+
+function NodeCard({ node }: { node?: Node }) {
+  if (!node) return null
+  const Icon = node.kind === 'database' ? Database : node.kind === 'load_balancer' ? GitBranch : Server
+  return <article className={`node-card ${node.state}`}>
+    <div className="node-top"><span className="node-icon"><Icon size={16}/></span><div><strong>{node.name}</strong><small>{node.kind.replace('_', ' ')}</small></div><span className={`pulse ${node.health}`}/></div>
+    <div className="node-state">{node.state.replace('_', ' ')}</div>
+    <div className="node-meta"><span>v{node.version}</span><span>{node.latency_ms}ms</span><span>{node.error_rate}% err</span></div>
+  </article>
 }
 
 export function App() {
-  const [services, setServices] = useState<Service[]>([])
-  const [incidents, setIncidents] = useState<Incident[]>([])
+  const [topology, setTopology] = useState<Topology>({ nodes: [], edges: [] })
+  const [runs, setRuns] = useState<Run[]>([])
   const [selectedId, setSelectedId] = useState<string>()
   const [events, setEvents] = useState<Event[]>([])
   const [config, setConfig] = useState<Config>()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const selected = useMemo(() => incidents.find(item => item.id === selectedId), [incidents, selectedId])
+  const selected = useMemo(() => runs.find(run => run.id === selectedId) || runs[0], [runs, selectedId])
+  const nodes = useMemo(() => Object.fromEntries(topology.nodes.map(node => [node.id, node])), [topology])
+  const gate = useMemo(() => selected?.gate_decisions.find(item => item.gate === 'database_change') || selected?.gate_decisions.at(-1), [selected])
+  const progress = selected?.plan.length ? Math.round(selected.plan.filter(step => ['completed', 'rolled_back', 'deferred'].includes(step.status)).length / selected.plan.length * 100) : 0
 
   const refresh = async () => {
     try {
-      const [serviceData, incidentData, configData] = await Promise.all([
-        fetchJson<Service[]>('/api/services'), fetchJson<Incident[]>('/api/incidents'), fetchJson<Config>('/api/config'),
+      const [topologyData, runData, configData] = await Promise.all([
+        fetchJson<Topology>('/api/topology'), fetchJson<Run[]>('/api/maintenance'), fetchJson<Config>('/api/config'),
       ])
-      setServices(serviceData); setIncidents(incidentData); setConfig(configData)
-      const activeId = selectedId || incidentData[0]?.id
+      setTopology(topologyData); setRuns(runData); setConfig(configData)
+      const activeId = selectedId || runData[0]?.id
       if (activeId) {
         setSelectedId(activeId)
-        setEvents(await fetchJson<Event[]>(`/api/incidents/${activeId}/events`))
+        setEvents(await fetchJson<Event[]>(`/api/maintenance/${activeId}/events`))
       } else setEvents([])
       setError('')
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to reach API') }
   }
 
-  useEffect(() => { void refresh(); const timer = setInterval(() => void refresh(), 1200); return () => clearInterval(timer) }, [selectedId])
+  useEffect(() => {
+    void refresh()
+    const timer = setInterval(() => void refresh(), 800)
+    return () => clearInterval(timer)
+  }, [selectedId])
 
-  const trigger = async (scenario: 'recoverable' | 'unsafe') => {
+  const start = async () => {
     setBusy(true)
     try {
-      const incident = await fetchJson<Incident>('/api/demo/trigger', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scenario }) })
-      setSelectedId(incident.id); await refresh()
+      const run = await fetchJson<Run>('/api/demo/start', { method: 'POST' })
+      setSelectedId(run.id); await refresh()
     } finally { setBusy(false) }
   }
 
-  const reset = async () => { setBusy(true); try { await fetchJson('/api/demo/reset', { method: 'POST' }); setSelectedId(undefined); await refresh() } finally { setBusy(false) } }
+  const reset = async () => {
+    setBusy(true)
+    try { await fetchJson('/api/demo/reset', { method: 'POST' }); setSelectedId(undefined); await refresh() }
+    finally { setBusy(false) }
+  }
 
   return <main>
     <header className="topbar">
-      <div className="brand"><div className="mark"><Activity size={20}/></div><div><strong>AfterAlert</strong><span>Autonomous Incident Operations</span></div></div>
-      <div className="runtime"><span className="live-dot"/> Agent online <code>{config?.model || 'connecting'}</code></div>
+      <div className="brand"><div className="clockmark">03:17</div><div><strong>Autonomous Maintenance Window</strong><span>Sleep through the maintenance window.</span></div></div>
+      <div className="runtime"><span className="live-dot"/> SYSTEM ARMED <code>{config?.model || 'connecting'}</code></div>
     </header>
 
     <section className="hero">
-      <div><p className="eyebrow">SYSTEM COMMAND</p><h1>Incidents handled.<br/><em>Before they become outages.</em></h1><p>Autonomous investigation, policy-controlled remediation, and auditable verification powered by Google ADK and Gemini.</p></div>
-      <div className="controls">
-        <button disabled={busy} onClick={() => trigger('recoverable')} className="primary"><Play size={17}/> Trigger recoverable incident</button>
-        <button disabled={busy} onClick={() => trigger('unsafe')}><ShieldAlert size={17}/> Trigger unsafe incident</button>
-        <button disabled={busy} onClick={reset} className="icon-button" aria-label="Reset demo"><RotateCcw size={17}/></button>
-      </div>
+      <div className="hero-copy"><p className="eyebrow">AFTER-HOURS CHANGE EXECUTION</p><h1>03:17 is when no sysadmin<br/><em>wants to be awake.</em></h1><p>Gemini reasons. Evidence Gates authorize. Every action is verified—and failed changes roll back automatically.</p></div>
+      <div className="hero-actions"><button className="primary" disabled={busy} onClick={start}><Play size={16}/> Start autonomous maintenance</button><button className="reset" disabled={busy} onClick={reset}><RotateCcw size={16}/> Reset environment</button></div>
     </section>
 
     {error && <div className="error">API connection error: {error}</div>}
 
-    <section className="services-section"><div className="section-heading"><div><p className="eyebrow">LIVE INFRASTRUCTURE</p><h2>System overview</h2></div><span>{services.filter(s => s.health === 'healthy').length}/{services.length} services healthy</span></div>
-      <div className="service-grid">{services.map(service => <article className={`service-card ${service.health}`} key={service.id}>
-        <div className="service-title"><span className="service-icon">{service.id === 'database' ? <Database/> : <Server/>}</span><div><h3>{service.name}</h3><p>{service.id}</p></div><span className={`badge ${service.health}`}>{service.health}</span></div>
-        <div className="metrics"><div><span>LATENCY</span><strong>{service.latency_ms}<small> ms</small></strong></div><div><span>ERROR RATE</span><strong>{service.error_rate}<small>%</small></strong></div><div><span>CPU</span><strong>{service.cpu_percent}<small>%</small></strong></div></div>
-      </article>)}</div>
+    <section className="request-strip">
+      <div><p className="eyebrow">APPROVED CHANGE REQUEST</p><p>{selected?.request || "Update the web tier and perform the approved database maintenance during tonight's maintenance window. Preserve availability and rollback failed changes."}</p></div>
+      <div className="window-stats"><div><span>WINDOW</span><strong>03:17–04:00</strong></div><div><span>PROGRESS</span><strong>{progress}%</strong></div><div><span>HUMAN INTERVENTIONS</span><strong className="lime">{selected?.human_interventions ?? 0}</strong></div><div><span>STATUS</span><strong className={selected?.status === 'completed_with_warnings' ? 'amber' : 'cyan'}>{selected ? statusName[selected.status] : 'Standing by'}</strong></div></div>
     </section>
 
-    <section className="workspace">
-      <aside className="queue"><div className="panel-title"><div><p className="eyebrow">INCIDENTS</p><h2>Response queue</h2></div><span>{incidents.length}</span></div>
-        <div className="queue-list">{incidents.length === 0 && <div className="empty"><CheckCircle2/><p>No incidents yet</p><span>Use a demo control to begin.</span></div>}{incidents.map(item => <button key={item.id} className={`incident-row ${selectedId === item.id ? 'selected' : ''}`} onClick={() => setSelectedId(item.id)}>
-          <span className={`severity ${item.status}`}>{item.status === 'escalated' ? <AlertTriangle/> : item.status === 'resolved' ? <CheckCircle2/> : <Zap/>}</span><span><strong>{item.service_id}</strong><small>{new Date(item.created_at).toLocaleTimeString()}</small></span><span className={`badge ${item.status}`}>{statusLabel[item.status]}</span>
-        </button>)}</div>
+    <section className="command-grid">
+      <aside className="plan-panel panel">
+        <div className="panel-head"><div><p className="eyebrow">LIVE PLAN</p><h2>Execution strategy</h2></div><Zap size={17}/></div>
+        <div className="plan-list">{!selected && <div className="empty"><Clock3/><p>Awaiting change window</p></div>}{selected?.plan.map(step => <div className={`plan-step ${step.status}`} key={step.id}>
+          <span className="step-status">{stepIcon(step.status)}</span><div><strong>{step.target.toUpperCase()}</strong><p>{step.objective}</p>{step.decision_summary && <small>{step.decision_summary}</small>}</div><span className="step-label">{step.status.replace('_', ' ')}</span>
+        </div>)}</div>
       </aside>
 
-      <section className="timeline-panel"><div className="panel-title"><div><p className="eyebrow">AUTONOMOUS EXECUTION</p><h2>Agent activity</h2></div>{selected && <span className={`badge ${selected.status}`}>{statusLabel[selected.status]}</span>}</div>
-        {!selected ? <div className="empty large"><Activity/><p>Waiting for an incident</p><span>The agent timeline will appear here.</span></div> : <div className="timeline">{events.map((event, index) => <div className="timeline-event" key={event.id}>
-          <div className="rail"><span className={event.status === 'error' ? 'error-node' : ''}/>{index < events.length - 1 && <i/>}</div><time>{new Date(event.timestamp).toLocaleTimeString()}</time><div><strong>{event.summary}</strong><p>{event.tool ? `Tool · ${event.tool}` : event.event_type.replace('_', ' ')}</p></div>
-        </div>)}</div>}
+      <section className="topology-panel panel">
+        <div className="panel-head"><div><p className="eyebrow">LIVE INFRASTRUCTURE</p><h2>Maintenance topology</h2></div><span className="availability"><ShieldCheck size={14}/> Availability {selected?.availability_preserved === false ? 'at risk' : 'preserved'}</span></div>
+        <div className="topology">
+          <div className="topo-row one"><NodeCard node={nodes['load-balancer']}/></div>
+          <div className="connector fork"/>
+          <div className="topo-row two"><NodeCard node={nodes.web01}/><NodeCard node={nodes.web02}/></div>
+          <div className="connector join"/>
+          <div className="topo-row one"><NodeCard node={nodes.worker}/></div>
+          <div className="connector straight"/>
+          <div className="topo-row one"><NodeCard node={nodes.database}/></div>
+        </div>
       </section>
 
-      <aside className="detail"><div className="panel-title"><div><p className="eyebrow">AUDIT RECORD</p><h2>Incident detail</h2></div></div>
-        {!selected ? <div className="empty"><Server/><p>Select an incident</p></div> : <div className="detail-content">
-          <label>TRIGGER</label><p>{selected.trigger}</p><label>PROBABLE CAUSE</label><p>{selected.probable_cause || 'Investigation in progress'}</p><label>ACTIONS</label><ul>{selected.actions.length ? selected.actions.map(a => <li key={a}>{a}</li>) : <li>No automatic action performed</li>}</ul><label>VERIFICATION</label><p>{selected.verification || (selected.escalation ? 'Escalated safely; infrastructure preserved' : 'Pending')}</p><label>TOOLS USED</label><div className="chips">{selected.tools_used.map(tool => <span key={tool}>{tool}</span>)}</div>
+      <aside className={`evidence-panel panel ${gate?.outcome || ''}`}>
+        <div className="panel-head"><div><p className="eyebrow">DETERMINISTIC AUTHORITY</p><h2>Evidence Gate</h2></div><ShieldCheck size={18}/></div>
+        {!gate ? <div className="empty"><ShieldCheck/><p>Evidence not evaluated yet</p></div> : <>
+          <div className="gate-title"><span>{gate.target.toUpperCase()} CHANGE GATE</span><strong>{gate.outcome === 'pass' ? 'PASS' : 'BLOCKED'}</strong></div>
+          <div className="evidence-list">{gate.evidence.map(item => <div className={item.passed ? 'passed' : 'failed'} key={item.key}><span>{item.passed ? <Check/> : <X/>}</span><div><strong>{item.label}</strong><small>Observed: {typeof item.observed === 'object' ? JSON.stringify(item.observed) : String(item.observed)}</small></div></div>)}</div>
+          <div className="gate-decision"><span>DECISION</span><p>{gate.summary}</p></div>
+        </>}
+      </aside>
+    </section>
+
+    <section className="lower-grid">
+      <section className="timeline-panel panel"><div className="panel-head"><div><p className="eyebrow">PROOF OF ACTION</p><h2>Autonomous activity</h2></div><Activity size={17}/></div>
+        <div className="timeline">{events.length === 0 && <div className="empty"><Activity/><p>No maintenance activity yet</p></div>}{events.map((event, index) => <div className="timeline-event" key={event.id}>
+          <div className="rail"><span className={event.status}/>{index < events.length - 1 && <i/>}</div><time>{new Date(event.timestamp).toLocaleTimeString([], {hour12:false})}</time><div><strong>{event.summary}</strong><p>{event.tool ? `TOOL · ${event.tool}` : event.event_type.replace('_', ' ')}{event.target ? ` · ${event.target.toUpperCase()}` : ''}</p></div>
+        </div>)}</div>
+      </section>
+
+      <aside className="outcome-panel panel"><div className="panel-head"><div><p className="eyebrow">WINDOW OUTCOME</p><h2>Final maintenance report</h2></div><CheckCircle2 size={18}/></div>
+        {!selected?.report ? <div className="empty"><Clock3/><p>Report generated at completion</p></div> : <div className="outcomes">
+          <div className="outcome success"><CheckCircle2/><span><small>WEB01</small><strong>UPDATED + VERIFIED</strong></span></div>
+          <div className="outcome rollback"><Undo2/><span><small>WEB02</small><strong>ROLLED BACK + VERIFIED</strong></span></div>
+          <div className="outcome blocked"><AlertTriangle/><span><small>DATABASE</small><strong>DEFERRED BY EVIDENCE POLICY</strong></span></div>
+          <div className="outcome availability-row"><ShieldCheck/><span><small>SERVICE AVAILABILITY</small><strong>PRESERVED</strong></span></div>
+          <p className="follow-up">Full audit report persisted · Manual intervention during window: 0</p>
         </div>}
       </aside>
     </section>
 
-    <footer><span>Google Cloud Run · Vertex AI · Firestore · Pub/Sub</span><span>Runtime: {config?.agent_runtime} / {config?.persistence_backend}</span></footer>
+    <footer><span>Google Cloud Run · Pub/Sub · Firestore · Vertex AI · Google ADK</span><span>{config?.agent_runtime || 'local'} planner / {config?.persistence_backend || 'memory'} state</span></footer>
   </main>
 }
+
