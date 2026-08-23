@@ -2,49 +2,50 @@
 
 ## Innovation & Operational Utility — 40%
 
-- [x] Solves a frequent, expensive incident-response workflow.
-- [x] Runs from an event to an outcome without continuous human prompting.
-- [x] Performs an observable remediation and verifies recovery.
-- [x] Demonstrates disciplined non-action and escalation for unsafe conditions.
-- [x] Preserves an operator-friendly audit trail without private chain-of-thought.
-- [ ] Add two operator interviews or credible problem evidence before final submission.
-- [ ] Replace placeholder branding with a memorable human-selected name.
+- [x] Eliminates a painful multi-step after-hours maintenance task.
+- [x] Runs autonomously after one approved request.
+- [x] Handles deviation from the happy path, not only a successful script.
+- [x] Performs observable update, verification, rollback, rollback verification, and refusal.
+- [x] Preserves availability and records zero human intervention.
+- [x] Differentiates clearly from alert triage, monitoring, copilot, and chatbot products.
+- [ ] Add credible public data or two anonymized operator interviews supporting the problem statement.
 
 ## Architectural Discipline & Tech Stack — 30%
 
-- [x] Gemini 3.5 Flash is the configured production model.
-- [x] Google ADK is the primary agent framework and receives real callable tools.
-- [x] Cloud Run hosts the production application.
-- [x] Firestore provides durable incident/event persistence.
-- [x] Pub/Sub provides asynchronous event delivery.
-- [x] Action authority is enforced in code and defaults to escalation.
-- [x] Local adapters enable deterministic, token-free tests.
-- [x] Structured errors, correlation IDs, and idempotent completed workflows exist.
-- [ ] Verify the ADK 2.7 runtime against real Vertex AI credentials.
-- [ ] Add authenticated Pub/Sub push or clearly frame public push as a hackathon limitation.
-- [ ] Add a transactional claim/lease if load testing uses multiple Cloud Run instances.
+- [x] Google ADK is the primary planning/replanning framework.
+- [x] Gemini 3.5 Flash is the configured production model through Vertex AI.
+- [x] Evidence Gates enforce authority in code.
+- [x] Maintenance state machine rejects invalid transitions.
+- [x] Mutating tools have action IDs and idempotency keys.
+- [x] Duplicate request/Pub/Sub processing cannot repeat a completed run.
+- [x] Rollback requires ownership and captured state.
+- [x] Firestore, Pub/Sub, and Cloud Run production adapters exist.
+- [x] Structured logs/events correlate maintenance and action IDs.
+- [x] Bounded plan validation retries exist.
+- [ ] Verify real ADK planning/replanning through Vertex AI.
+- [ ] Add Firestore transactional run claiming before multi-instance load tests.
+- [ ] Configure authenticated Pub/Sub push and a dead-letter topic for production hardening.
 
 ## Demo & Production Readiness — 30%
 
-- [x] Operations dashboard visibly shows state changes and agent activity.
-- [x] Recoverable and unsafe buttons make the demo deterministic.
-- [x] Backend tests pass locally in Python 3.12 Docker.
-- [x] Frontend production build passes.
-- [x] Complete and verify the full Docker image build and container smoke test.
-- [ ] Deploy and capture the public Cloud Run URL.
-- [ ] Capture visible Vertex AI, Firestore, and Pub/Sub proof.
-- [ ] Record and trim a sub-four-minute demo video.
-- [ ] Run the full demo twice against the deployed application.
-- [ ] Add GitHub repository and demo video links to Devpost.
+- [x] Dashboard instantly communicates autonomy, evidence, and reversibility.
+- [x] Stateful topology changes live.
+- [x] Plan visibly shows completed, rolled-back, and deferred steps.
+- [x] Evidence panel shows individual machine facts and the blocking decision.
+- [x] Final report gives a concise submission-ready outcome.
+- [x] Nineteen backend tests and frontend production build pass.
+- [x] Final renamed Docker image and smoke test pass.
+- [ ] Cloud Run deployment works on the public URL.
+- [ ] Firestore, Pub/Sub, Vertex, and Cloud Run proof is captured.
+- [ ] Complete two rehearsals and record a sub-four-minute video.
 
-## Compliance and submission hygiene
+## Compliance and hygiene
 
-- [x] English documentation and application UI.
-- [x] No secrets or credentials in source.
-- [x] AI development disclosure included.
-- [x] Reused/pre-existing component statement included.
-- [x] No unverified cloud claims presented as completed.
-- [ ] Choose and add a license.
-- [ ] Confirm official deadline/time zone and all current rules on submission day.
-- [ ] Publish optional technical article and social post only after the core submission is verified.
-- [ ] Consider an additional Google AI model only if it improves the workflow without demo risk.
+- [x] English app and submission material.
+- [x] No private chain-of-thought exposure.
+- [x] No employer names, real hosts, private logs, credentials, or proprietary data.
+- [x] AI development disclosure and reuse disclosure included.
+- [x] Cloud-dependent claims remain marked unverified.
+- [ ] Add a license.
+- [ ] Verify official deadline/rules on submission day.
+- [ ] Add multimodal ingestion only after every core proof item passes.

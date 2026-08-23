@@ -3,7 +3,7 @@ import logging
 from typing import Any
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
-logger = logging.getLogger("incident-agent")
+logger = logging.getLogger("autonomous-maintenance")
 
 
 def log_event(event: str, *, maintenance_id: str | None = None, **fields: Any) -> None:

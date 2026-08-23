@@ -1,80 +1,156 @@
-# AfterAlert
+# 03:17
 
-An autonomous IT incident response agent built for the **Google / Devpost All Things Agentic Hackathon 2026**, targeting **The Taskmaster** category.
+## Autonomous Maintenance Window
 
-> Repository: [Zachiran42/after-alert](https://github.com/Zachiran42/after-alert). Product name: **AfterAlert**.
+> **“Sleep through the maintenance window.”**
+
+**03:17 autonomously executes approved after-hours infrastructure changes, verifies every step, rolls back failed changes, and refuses to continue when deterministic evidence no longer makes the next action safe.**
+
+Built for the **Google / Devpost All Things Agentic Hackathon 2026**, targeting **The Taskmaster** track.
+
+Repository: [Zachiran42/0317-autonomous-maintenance](https://github.com/Zachiran42/0317-autonomous-maintenance)
 
 ## The problem
 
-IT operators repeatedly receive an alert, gather health data and logs, correlate evidence, consult runbooks, select a remediation, verify recovery, and document the result. Delays and manual handoffs turn routine incidents into outages.
+Traditional infrastructure automation assumes that the runbook will work. Real maintenance windows do not.
 
-This project runs that workflow autonomously against safe, reproducible simulated infrastructure. It is an event-driven operational system—not a chatbot. An incident event starts a background workflow; Gemini chooses tools and actions through Google ADK; code enforces safety boundaries; the system verifies the outcome and persists an audit trail.
+Administrators stay awake because somebody must interpret an unexpected health check, decide whether it is safe to continue, roll back a failed change, and adapt the remaining plan. The commands are often routine; the difficult part is handling reality when it diverges from the happy path.
 
-## Taskmaster workflow
+03:17 automates that judgment layer without giving a probabilistic model unrestricted authority.
 
-1. Receive an alert event.
-2. Inspect service health, logs, metrics, and dependencies.
-3. Correlate evidence and search runbooks/history.
-4. Choose an action through Gemini 3.5 Flash and Google ADK.
-5. Enforce the action policy in the tool layer.
-6. Execute a permitted remediation or create a precise escalation.
-7. Verify the result.
-8. Persist the incident and its observable event timeline.
+## The central idea: Autonomous Change with Evidence Gates
 
-The UI shows tool calls, observations, short decision summaries, and results. It never exposes private chain-of-thought.
+Gemini interprets the change request, discovers context through tools, creates the plan, and replans after unexpected observations. Deterministic Python code controls authorization, evidence thresholds, tool arguments, rollback eligibility, and state transitions.
 
-## Features
+```text
+Gemini / Google ADK proposes the next objective
+                       |
+                       v
+                 Evidence Gate
+                 /           \
+              PASS           FAIL
+               |              |
+               v              v
+             ACTION      REPLAN / DEFER
+               |
+               v
+             VERIFY
+            /      \
+         PASS      FAIL
+          |          |
+       NEXT STEP   ROLLBACK
+                     |
+                     v
+                   VERIFY
+```
 
-- Deterministic recoverable scenario: `web-api` worker deadlock, stateless restart, health verification, and incident report.
-- Unsafe scenario: database checksum corruption is investigated and escalated without a destructive action.
-- Ten real ADK-callable Python tools with typed inputs, structured outputs, errors, policy checks, and correlated events.
-- Explicit allow/escalate policy implemented in code.
-- Google ADK 2.x runtime using Gemini 3.5 Flash through Vertex AI.
-- Cloud Run deployment, Firestore persistence, and Pub/Sub background delivery.
-- In-memory/local background fallbacks for fast, credential-free development and tests.
-- Responsive operations dashboard with polling and deterministic demo controls.
-- Idempotent worker behavior: only queued incidents run, so Pub/Sub redelivery cannot repeat a finished remediation.
+This visibly demonstrates **probabilistic reasoning plus deterministic execution safety**.
+
+## Golden demonstration
+
+The included stateful infrastructure simulator models:
+
+```text
+                 LOAD BALANCER
+                  /          \
+              WEB01          WEB02
+                 \            /
+                  API / WORKER
+                       |
+                   DATABASE
+```
+
+One approved request starts the entire asynchronous workflow:
+
+> Update the web tier and perform the approved database maintenance during tonight's maintenance window. Preserve service availability where possible. Validate every target before continuing and rollback failed changes.
+
+The reproducible outcome is:
+
+| Target | Autonomous result | Proof |
+|---|---|---|
+| WEB01 | Updated and restored | Drain, rollback point, update, restart, health check, synthetic test, error threshold, pool restore |
+| WEB02 | Rolled back | Functional test fails at 24% errors; logs and metrics collected; rollback selected and verified |
+| DATABASE | Deferred | Backup and DB health pass; target-version redundancy and WEB02 target state fail |
+| Availability | Preserved | At least one verified web node remains in service throughout |
+| Human intervention | 0 | The workflow continues after one approved request |
+
+The simulator does not fake UI status. Tools mutate backend node version, lifecycle state, health, error rate, logs, load-balancer membership, snapshots, and rollback points. The dashboard polls that real state.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    UI[React operations dashboard] --> API[FastAPI on Cloud Run]
-    API -->|incident.created| PS[Pub/Sub]
-    PS -->|push event| WORKER[Incident worker]
+    UI[Web dashboard<br/>live topology + plan + evidence] --> API[Cloud Run FastAPI]
+    API -->|maintenance.created| PS[Pub/Sub]
+    PS --> WORKER[Maintenance worker]
     WORKER --> ADK[Google Agent Development Kit]
-    ADK --> GEMINI[Gemini 3.5 Flash on Vertex AI]
-    ADK --> TOOLS[Health / Logs / Metrics / Runbooks / Actions]
-    TOOLS --> POLICY[Code-enforced action policy]
-    TOOLS --> SIM[Simulated services]
-    TOOLS --> FS[(Firestore incidents + events)]
+    ADK --> GEMINI[Gemini 3.5 Flash<br/>Vertex AI]
+    GEMINI --> PLANNER[Planner / Replanner]
+    PLANNER --> GATE[Deterministic Evidence Gate]
+    GATE -->|PASS| TOOLS[Isolated maintenance tools]
+    GATE -->|FAIL| REPLAN[Replan / Defer / Escalate]
+    TOOLS --> SIM[Stateful infrastructure simulator]
+    TOOLS --> VERIFY[Health + synthetic verification]
+    VERIFY -->|FAIL| ROLLBACK[Verified rollback]
+    SIM --> FS[(Firestore<br/>runs + events + actions + reports)]
     FS --> API
 ```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for boundaries and failure handling.
+See [the detailed architecture](docs/ARCHITECTURE.md) and [renderable SVG](docs/architecture.svg).
+
+## Why this is agentic—not a deployment script
+
+- Gemini uses Google ADK tools to inspect the request, topology, health, metrics, logs, runbooks, history, and capacity.
+- Gemini returns a structured initial plan rather than receiving a hard-coded transcript.
+- Verification observations are returned to Gemini for replanning.
+- The executor chooses the next eligible plan step from persisted state.
+- Evidence Gate rejection is returned as an observation; the planner explains and defers the database step.
+- Tool execution, safety, rollback eligibility, and state transitions remain deterministic.
+- The local planner is used only for deterministic, zero-token tests and rehearsal; deployed mode uses ADK/Vertex AI.
+
+No private chain-of-thought is shown or stored. Only objectives, tool calls, observations, concise decision summaries, policy outcomes, and results are exposed.
 
 ## Technology
 
-- Python 3.12, FastAPI, Pydantic, pytest
+- Python 3.12, FastAPI, Pydantic, pytest, Ruff
 - Google Agent Development Kit 2.x
-- Gemini 3.5 Flash (`gemini-3.5-flash`) through Vertex AI
+- Gemini 3.5 Flash through Vertex AI
 - Google Cloud Run, Firestore, Pub/Sub, Cloud Build
 - React, TypeScript, Vite
-- Docker / Docker Compose
+- Docker and Docker Compose
+
+## Repository structure
+
+```text
+backend/app/
+  agent.py          ADK planner, local planner, safe executor, replanning
+  models.py         maintenance state machine, plans, evidence, actions, events
+  policy.py         deterministic Evidence Gates and action categories
+  simulator.py      stateful five-node synthetic infrastructure
+  tools.py          isolated, observable, idempotent ADK-callable tools
+  repository.py     in-memory and Firestore persistence
+  events.py         Pub/Sub publisher
+  main.py           API, worker endpoint, dashboard serving
+frontend/           live maintenance command center
+scripts/            PowerShell and Bash Google Cloud deployment
+docs/               architecture, safety, demo, Devpost, judging, migration
+```
 
 ## Local setup
 
-### One command (recommended)
+### One command
 
 ```bash
 docker compose up --build
 ```
 
-Open <http://localhost:8080>. Local mode uses the deterministic offline runtime, in-memory persistence, and local background tasks. No cloud credentials or model tokens are consumed.
+Open <http://localhost:8080>, click **Start autonomous maintenance**, and do not interact again. Local mode uses the deterministic planner, in-memory persistence, and local background tasks. It consumes no model tokens.
 
-### Windows PowerShell native development
+The Compose profile adds a short `DEMO_STEP_DELAY_SECONDS` so state changes remain visible. This is presentation pacing only; actions still execute against real simulator state.
 
-Backend (Python 3.12 or 3.13):
+### Windows PowerShell development
+
+Backend with Python 3.12 or 3.13:
 
 ```powershell
 cd backend
@@ -84,7 +160,7 @@ pip install -e ".[dev]"
 uvicorn app.main:app --reload --port 8080
 ```
 
-Frontend in another terminal:
+Frontend in a second terminal:
 
 ```powershell
 cd frontend
@@ -97,23 +173,25 @@ Open <http://localhost:5173>.
 
 ## Environment variables
 
-Copy `.env.example` to `.env` for local overrides. Never commit `.env` or credentials.
+Copy `.env.example` to `.env` for local overrides. Never commit `.env`, API keys, credential files, or service-account JSON.
 
 | Variable | Production value | Purpose |
 |---|---|---|
-| `AGENT_RUNTIME` | `adk` | Enables the genuine Google ADK runtime |
-| `PERSISTENCE_BACKEND` | `firestore` | Stores incidents and events in Firestore |
-| `EVENT_BACKEND` | `pubsub` | Publishes background incident events |
-| `GOOGLE_CLOUD_PROJECT` | project ID | Google Cloud project |
-| `GOOGLE_CLOUD_LOCATION` | `global` | Vertex AI location |
+| `AGENT_RUNTIME` | `adk` | Uses Gemini/Google ADK for planning and replanning |
+| `PERSISTENCE_BACKEND` | `firestore` | Persists runs, actions, events, and reports |
+| `EVENT_BACKEND` | `pubsub` | Executes approved requests asynchronously |
+| `GOOGLE_CLOUD_PROJECT` | project ID | Target Google Cloud project |
+| `GOOGLE_CLOUD_LOCATION` | `global` | Vertex AI endpoint location |
 | `GOOGLE_GENAI_USE_VERTEXAI` | `true` | Routes Gemini through Vertex AI |
-| `GEMINI_MODEL` | `gemini-3.5-flash` | Required application model |
+| `GEMINI_MODEL` | `gemini-3.5-flash` | Hackathon runtime model |
+| `PUBSUB_TOPIC` | `maintenance-events` | Approved request event topic |
+| `DEMO_STEP_DELAY_SECONDS` | `0.45` | Makes real state transitions legible in the demo |
 
-Application Default Credentials are used; there is no API key in the repository.
+Application Default Credentials are used; no runtime secret is stored in this repository.
 
 ## Google Cloud deployment
 
-Prerequisites: a billed Google Cloud project, `gcloud`, authenticated user credentials, and permission to enable APIs/create resources. Review the script before running it; the script asks for the literal confirmation `DEPLOY` before creating billable resources.
+Prerequisites: a billed Google Cloud project, authenticated `gcloud`, Application Default Credentials, and appropriate IAM permissions. Review the script before executing it. It asks for the literal confirmation `DEPLOY` before creating potentially billable resources.
 
 ```powershell
 gcloud auth login
@@ -121,70 +199,89 @@ gcloud auth application-default login
 .\scripts\deploy.ps1 -ProjectId "YOUR_PROJECT_ID"
 ```
 
-The script enables Vertex AI, Cloud Run, Cloud Build, Artifact Registry, Firestore, and Pub/Sub; creates the topic/database when absent; deploys with `min-instances=0` and `max-instances=2`; creates/updates the push subscription; and prints the Cloud Run URL.
+The script enables the required APIs, creates Firestore and Pub/Sub resources when absent, deploys `autonomous-maintenance-0317` to Cloud Run, configures scale-to-zero with two maximum instances, creates/updates the push subscription, and prints the Cloud Run URL.
 
-Cloud Run uses the service identity's Application Default Credentials. Grant least-privilege roles appropriate to your organization (Vertex AI User, Datastore User, and Pub/Sub Publisher/Subscriber) when the default deployment identity does not already have them.
+Cloud deployments should use a dedicated least-privilege service identity with Vertex AI User, Datastore User, Pub/Sub Publisher, and Pub/Sub Subscriber access. The current simple push endpoint is public for hackathon reproducibility; authenticated Pub/Sub push is the first production-hardening task.
 
-## Demo procedure
+## API
 
-1. Open the Cloud Run URL and show the runtime footer (`adk / firestore`).
-2. Click **Trigger recoverable incident** and stop interacting.
-3. Watch health/log/metric/runbook tool calls, policy approval, restart, verification, and resolution appear.
-4. Open the incident audit record and Firestore documents.
-5. Click **Trigger unsafe incident**.
-6. Show the policy-blocked database action and evidence-rich escalation with zero restart.
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/health` | Liveness |
+| `GET /api/topology` | Current infrastructure state |
+| `GET /api/maintenance` | Maintenance history |
+| `POST /api/maintenance` | Submit one approved change request |
+| `GET /api/maintenance/{id}` | Plan, gates, actions, and report |
+| `GET /api/maintenance/{id}/events` | Auditable event timeline |
+| `POST /api/demo/start` | Seed the golden request |
+| `POST /api/demo/reset` | Restore synthetic infrastructure |
+| `POST /api/events/pubsub` | Pub/Sub push worker |
 
-See [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) for the four-minute narration.
-
-## Tests
+## Tests and validation
 
 ```bash
 docker run --rm -v "${PWD}/backend:/app" -w /app python:3.12-slim \
-  sh -c "pip install -e '.[dev]' && pytest -q"
+  sh -c "pip install -e '.[dev]' && ruff check app tests && pytest -q"
 cd frontend && npm ci && npm run build
-docker build -t incident-response-agent .
+docker build -t autonomous-maintenance-0317 .
 ```
 
-The suite covers both scenarios, policy rejection, restart, post-remediation verification, persistence, failed tool execution, and API health/demo behavior. Gemini is not called by unit tests.
+The 19-test suite covers request ingestion, dependency discovery, structured planning, allowed and denied gates, WEB01 success, WEB02 failure, rollback, rollback verification, DB refusal, replanning, idempotency, persistence, invalid state transitions, forbidden actions, backend endpoints, duplicate events, and the complete golden scenario. Unit tests mock model planning with a deterministic planner and consume no tokens.
 
-## Safety model
+## Safety and resilience
 
-Automatically allowed: observation, runbook/history search, restart of a stateless simulated service, verification, reporting, and escalation.
+- Read operations are automatically allowed.
+- Safe changes require explicit evidence gates.
+- Rollback requires a verified rollback point and proof that the current run owns the changed state.
+- Restricted and unknown actions fail closed.
+- Every meaningful action has an idempotency key and execution record.
+- Duplicate Pub/Sub deliveries cannot restart a completed run.
+- Invalid state transitions raise an error.
+- Malformed Gemini plans are validated and retried only within a bounded loop.
+- Tool errors and failed verification are persisted instead of converted into invented success.
 
-Escalation required: data deletion/modification, firewall changes, credential changes, database restarts, disabling security controls, irreversible actions, and unknown actions. The Python tool layer rejects these even if a model requests them.
+See [SAFETY_MODEL.md](docs/SAFETY_MODEL.md).
 
-## Resilience and observability
+## Four-minute demo
 
-- Incident IDs correlate structured JSON logs and timeline events.
-- Pub/Sub duplicate messages are ignored once an incident leaves `queued`.
-- Tool errors are recorded before propagation.
-- Model/tool failure marks the workflow failed rather than inventing success.
-- Firestore keeps the audit record independent of Cloud Run instance lifetime.
-- Cloud Run timeout is bounded and instances scale to zero.
+The product is engineered for one unedited run:
+
+1. Submit the approved request once.
+2. Watch Gemini plan and the pre-flight gates pass.
+3. Watch WEB01 drain, update, verify, and return.
+4. Watch WEB02 fail its synthetic test and roll back autonomously.
+5. Watch the database Evidence Gate fail target-version redundancy.
+6. Watch Gemini replan and defer database maintenance.
+7. Show the report, Firestore records, Pub/Sub delivery, Cloud Run service, and Vertex AI logs.
+
+See [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
 
 ## Known limitations
 
-- Infrastructure is intentionally simulated; no production host or database is modified.
-- The local rule runtime is deterministic and exists for tests/demo rehearsal; only `AGENT_RUNTIME=adk` is hackathon production mode.
-- Real Vertex AI/Firestore/Pub/Sub execution and Cloud Run screenshots must be verified after deployment to the submitter's project.
-- Demo reset restores simulated service health but deliberately preserves the Firestore audit history.
-- Pub/Sub push is deployed to the public Cloud Run endpoint for simple reproducibility; production use should add authenticated push and operator authorization.
+- The infrastructure is synthetic and cannot affect an employer or real production system.
+- The process-local simulator is intentionally small; Firestore persists workflow/audit state, but simulator state itself should move to a transactional persistent adapter for multi-instance production use.
+- Real Vertex AI, Firestore, Pub/Sub, and Cloud Run proof remains deployment-dependent until explicitly verified in the submitter's billed project.
+- Pub/Sub push authentication and transactional run claiming are documented production-hardening items.
+- PDF/image change-request ingestion is deferred until the core cloud deployment is verified.
 
 ## Hackathon compliance
 
-- Newly created for All Things Agentic Hackathon 2026.
-- Uses Gemini 3.5 Flash as the submitted application's runtime model.
-- Uses Google ADK as the primary agent framework.
-- Uses Cloud Run, Firestore, and Pub/Sub.
-- Demonstrates event → plan/tool use → policy decision → action → verification → persistence.
-- No OpenAI model is used by the application. Codex was used only as a development tool.
+- Built during the All Things Agentic Hackathon 2026 period.
+- Targets The Taskmaster with a complete event-to-outcome workflow.
+- Uses Gemini 3.5 Flash as deployed runtime intelligence.
+- Uses Google ADK as the agent framework.
+- Uses Vertex AI, Cloud Run, Firestore, and Pub/Sub.
+- Shows real tool execution, state mutation, verification, rollback, evidence refusal, persistence, and reporting.
+- Uses no OpenAI model at application runtime.
+- Contains no employer names, private infrastructure, credentials, tickets, logs, or proprietary data.
 
-Deployment-dependent claims remain explicitly unverified until a real Cloud Run deployment is completed and captured.
+Cloud-dependent claims are deliberately marked unverified until a real deployment is captured.
 
-## AI development disclosure and reused components
+## AI development disclosure and reused work
 
-Codex/GPT-5.6 assisted with software development. The running application uses Gemini through Google's stack. No pre-existing application code or proprietary incident data was reused. Third-party open-source dependencies are listed in the package manifests and retain their own licenses.
+Codex/GPT-5.6 assisted with development. Gemini is the submitted application's runtime model. The project reused only its own hackathon-period scaffolding—ADK integration, cloud adapters, simulator patterns, dashboard structure, and tests—then migrated them to the maintenance-window domain. No pre-hackathon application or confidential component was reused.
 
 ## License
 
-Add a human-selected license before making the submission repository public.
+Add a human-selected open-source license before final Devpost submission.
+

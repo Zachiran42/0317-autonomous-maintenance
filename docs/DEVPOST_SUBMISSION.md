@@ -1,60 +1,77 @@
 # Devpost Submission Draft
 
-> Verification status: local implementation and automated tests are complete. Replace every `[VERIFY AFTER DEPLOYMENT]` marker only after capturing evidence from the real Google Cloud project.
+> Local implementation, tests, frontend build, and Docker validation must be distinguished from cloud verification. Do not remove `[VERIFY AFTER DEPLOYMENT]` markers without visible evidence.
 
 ## Inspiration
 
-IT teams lose valuable time repeating the same incident workflow: receive an alert, gather evidence, consult runbooks, choose a safe action, verify recovery, and write a report. Routine failures often wait for a human even when the remediation is known. We wanted to demonstrate responsible autonomy: an agent that acts when the risk is bounded and deliberately stops when it is not.
+Infrastructure maintenance often happens after normal working hours. Traditional automation handles the happy path, but the moment a prerequisite is missing, a functional check fails, or rollback becomes necessary, an administrator has to take over.
+
+Administrators stay awake not because every command is difficult. They stay awake because somebody must interpret unexpected evidence and decide whether it is safe to continue.
+
+**03:17 is when no sysadmin wants to be awake.**
 
 ## What it does
 
-AfterAlert is an event-driven autonomous IT incident response system. A service alert starts a background workflow. A Google ADK agent running Gemini 3.5 Flash inspects health, metrics, logs, dependencies, runbooks, and incident history through real tools. It chooses a remediation, passes it through a code-enforced action policy, performs permitted actions, verifies the outcome, and stores an auditable incident record.
+03:17 is an autonomous after-hours IT change execution system. An administrator submits one approved maintenance request and leaves. The system discovers topology, consults runbooks, creates a structured plan, establishes pre-change evidence, performs permitted changes, verifies every step, replans when reality differs from the plan, rolls back failed changes, and produces a complete audit report.
 
-The recoverable demonstration injects a deadlocked worker in a stateless web API. The agent independently investigates, restarts the service, verifies recovery, and records the result. The unsafe demonstration injects database checksum corruption. The agent preserves evidence, performs no database change, and creates a precise escalation.
+Its defining architectural pattern is **Autonomous Change with Evidence Gates**. Gemini reasons and proposes. Deterministic code controls authority.
+
+In the golden demonstration, WEB01 updates successfully. WEB02 starts but fails a synthetic functional test with a 24% error rate; 03:17 collects evidence, selects rollback, restores the previous version, and verifies recovery. The database step is then blocked because the web tier no longer has full target-version redundancy. Gemini receives that rejection, replans, and defers the database change. Availability remains preserved with zero human intervention.
 
 ## How we built it
 
-- FastAPI and Python 3.12 provide the API, worker, simulator, policy, tools, and repository interfaces.
-- Google Agent Development Kit exposes ten typed incident tools to Gemini.
-- Gemini 3.5 Flash runs through Vertex AI in production mode.
-- Pub/Sub delivers incident events asynchronously to the worker.
-- Firestore persists incidents and observable agent events.
-- Cloud Run hosts the API, dashboard, and worker endpoint with scale-to-zero cost controls.
-- React, TypeScript, and Vite provide the live operations dashboard.
-- A deterministic local agent and in-memory repository keep tests reproducible and token-free.
+- Google ADK presents request, topology, health, metric, log, runbook, history, and capacity tools to Gemini.
+- Gemini 3.5 Flash through Vertex AI creates the structured plan and replans after failures/gate rejection.
+- A FastAPI executor advances a validated maintenance state machine.
+- Python Evidence Gates enforce prerequisites, thresholds, rollback ownership, and restricted actions.
+- A real stateful simulator models load balancing, five nodes, versions, health, metrics, logs, snapshots, and rollback points.
+- Pub/Sub starts the workflow asynchronously from one approved request.
+- Firestore persists maintenance runs, observable events, action executions, and final reports.
+- Cloud Run hosts the API, worker, and React command center with scale-to-zero cost controls.
+- A deterministic planner replaces Gemini in unit tests so CI consumes no tokens.
 
 ## Challenges we ran into
 
-The central challenge was demonstrating real autonomy without surrendering safety to a prompt. We separated decision-making from authority: Gemini can select tools, but action tools enforce explicit policy in code. We also designed local fallbacks so judges can reproduce the workflow without enterprise systems or cloud credentials, while retaining a genuine Google Cloud production path.
+The main challenge was avoiding two weak extremes: a hard-coded deployment script with decorative AI, or an unconstrained model allowed to mutate infrastructure. We separated planning from execution authority. Gemini handles ambiguity and replanning; tools and Evidence Gates enforce what can actually happen.
 
-Another challenge was showing agent work without exposing private reasoning. We created an event model containing only tool calls, observations, short decision summaries, policy outcomes, and verified results.
+The second challenge was making failure the strongest part of the demo. WEB02's deterministic fixture fails only after the service restarts, proving that readiness alone is insufficient. A synthetic transaction and error threshold expose the problem, and rollback changes real simulator state back to the captured version.
+
+The third challenge was showing useful agent activity without exposing private reasoning. The timeline stores only objectives, tools, observations, concise decision summaries, gate outcomes, verification, and results.
 
 ## Accomplishments that we're proud of
 
-- A complete event-to-verification workflow rather than a conversational answer.
-- Observable state changes in a reproducible simulated infrastructure.
-- Fail-closed policy enforcement that blocks database and destructive operations.
-- An evidence-rich escalation demonstrating that safe autonomy includes knowing when not to act.
-- Automated coverage of both scenarios and the security boundary.
-- A compact dashboard that makes the autonomous workflow understandable in under four minutes.
+- A complete event-to-report workflow instead of a chatbot response.
+- Genuine state mutation, verification failure, rollback, and rollback verification.
+- Database refusal based on specific machine evidence rather than a prompt disclaimer.
+- Gemini-driven structured planning/replanning with deterministic action authority.
+- Idempotent tools and duplicate event protection.
+- A signature Evidence Gate UI that explains why the system did—or did not—act.
+- Nineteen deterministic tests covering the entire golden scenario and safety boundaries.
 
 ## What we learned
 
-Reliable operational agents need more than a capable model. They need narrow tools, an external authority boundary, idempotency, verification, durable history, and a UI that communicates evidence rather than hidden reasoning. Local/cloud abstractions also made the system easier to test without weakening the production architecture.
+Operational autonomy depends less on generating commands than on proving when each command is safe. Reliable agents need explicit state, narrow tools, external authority, observable evidence, idempotency, verification, reversibility, and honest refusal.
+
+We also learned that a compelling demo should be designed around a deviation from the runbook. The happy path proves automation; the failed path proves agency.
 
 ## What's next
 
-After the hackathon we would add authenticated Pub/Sub push, transactional worker leases, dead-letter queues, Cloud Monitoring/OpenTelemetry, operator RBAC, approval workflows, and narrowly scoped connectors for real monitoring platforms. We would expand the scenario library and evaluate remediation quality against a labeled incident corpus.
+We would add authenticated Pub/Sub push, a transactional Firestore run lease, dead-letter handling, OpenTelemetry/Cloud Monitoring, operator RBAC, approval signatures, and narrowly scoped adapters for real change-management and monitoring systems.
+
+Once the core cloud flow is fully verified, the next UX improvement is multimodal request ingestion: Gemini extracts targets, constraints, window, and rollback requirements from a PDF, screenshot, exported ticket image, or plain text.
 
 ## Technologies used
 
-Google ADK, Gemini 3.5 Flash, Vertex AI, Cloud Run, Firestore, Pub/Sub, Cloud Build, Python 3.12, FastAPI, Pydantic, pytest, React, TypeScript, Vite, Docker.
+Gemini 3.5 Flash, Vertex AI, Google Agent Development Kit, Cloud Run, Firestore, Pub/Sub, Cloud Build, Python 3.12, FastAPI, Pydantic, pytest, Ruff, React, TypeScript, Vite, Docker.
 
 ## Verification before submission
 
-- [ ] `[VERIFY AFTER DEPLOYMENT]` Public Cloud Run URL works.
-- [ ] `[VERIFY AFTER DEPLOYMENT]` Gemini tool calls appear in Vertex AI / application logs.
-- [ ] `[VERIFY AFTER DEPLOYMENT]` Firestore incident and event documents are visible.
-- [ ] `[VERIFY AFTER DEPLOYMENT]` Pub/Sub topic and push subscription deliver an event.
-- [x] Replace the placeholder with the human-selected name, AfterAlert.
-- [ ] Add repository, demo video, and optional article/social links.
+- [x] Golden workflow passes deterministic local tests.
+- [x] WEB01 state mutation, WEB02 failure/rollback, and DB refusal are covered.
+- [x] Frontend production build passes.
+- [ ] `[VERIFY AFTER DEPLOYMENT]` Public Cloud Run URL responds.
+- [ ] `[VERIFY AFTER DEPLOYMENT]` Gemini structured plan/replan appears in application logs.
+- [ ] `[VERIFY AFTER DEPLOYMENT]` Firestore run/event/action/report records are visible.
+- [ ] `[VERIFY AFTER DEPLOYMENT]` Pub/Sub push delivery is visible.
+- [ ] Add repository URL, demo video, and optional technical article/social links.
+

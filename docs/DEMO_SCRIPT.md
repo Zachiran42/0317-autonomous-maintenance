@@ -1,81 +1,81 @@
 # Four-Minute Demo Script
 
-Target length: **3:55**. Rehearse with a clean demo state. Keep the Cloud Run dashboard open in one tab and Google Cloud Console tabs for Firestore, Pub/Sub, Cloud Run, and Logs Explorer preloaded.
+Target: **3:55**, one unedited golden run. Preload the 03:17 Cloud Run URL plus Cloud Run, Firestore, Pub/Sub, and Logs Explorer tabs. Reset the synthetic environment before recording.
 
-## 0:00–0:25 — The problem
+## 0:00–0:20 — Hook
 
-**Show:** Operations dashboard, all three services healthy.
+**Show:** 03:17 command center, healthy topology, approved request.
 
-“Incident response is a repetitive workflow, but most automation either stops at recommendations or acts without a clear safety boundary. AfterAlert is an autonomous responder that investigates, takes permitted actions, verifies the result, and creates an audit record—without waiting for a chat prompt.”
+“I'm a systems administrator. Maintenance windows happen when everyone else is asleep. Automation handles the easy path, but when reality deviates from the runbook, somebody still has to stay awake.”
 
-## 0:25–0:45 — Architecture
+“03:17 closes that gap.”
 
-**Show:** README Mermaid diagram or `docs/ARCHITECTURE.md`.
+## 0:20–0:40 — Concept
 
-“An alert enters our Cloud Run API, Pub/Sub starts a background worker, and a Google ADK agent uses Gemini 3.5 Flash through Vertex AI. Its real tools inspect simulated infrastructure and write incidents and observable events to Firestore. A code policy—not a prompt—controls authority.”
+**Show:** README architecture diagram, then Evidence Gate panel.
 
-## 0:45–2:30 — Recoverable incident
+“Gemini reasons and replans through Google ADK. Deterministic Evidence Gates authorize every meaningful action. Every action is verified, and failed changes are reversible.”
 
-**Show:** Dashboard. Click **Trigger recoverable incident** once, then take your hands away.
+## 0:40–2:45 — Live autonomous execution
 
-“The web API is now unhealthy. From this point, the operator does nothing.”
+**Show:** Click **Start autonomous maintenance** once. Do not interact again.
 
-Follow the activity timeline as it appears:
+Narrate only observable state:
 
-- Alert received; autonomous investigation starts.
-- Health, logs, metrics, and dependency tools run.
-- Point out the deadlock evidence and healthy database dependency.
-- Runbook/history searches execute.
-- Policy check permits a restart of the stateless web API.
-- The service card visibly returns to healthy.
-- Verification runs after the action.
-- The final report is created and status becomes resolved.
+- “The approved change request enters through Pub/Sub.”
+- “Gemini discovers topology and runbooks, then submits a structured rolling plan.”
+- “Pre-flight proves health, capacity, approval, and backup evidence.”
+- “WEB01 drains. WEB02 carries traffic.”
+- “A rollback point is captured before the update.”
+- “WEB01 updates, restarts, passes health and synthetic verification, then returns to the pool.”
+- “The plan advances to WEB02.”
+- “WEB02 drains, updates, and restarts—but its functional test fails.”
+- “The error rate is 24%, above the 5% threshold. The agent gathers logs and metrics.”
+- “Gemini replans. The rollback gate confirms this maintenance owns the change and has verified rollback state.”
+- “WEB02 returns to version 1.0.0, healthy and back in the pool. Rollback verification passes.”
 
-“This is an observable action: the simulator state and restart count changed, the result was independently verified, and every step is correlated to one incident ID.”
+Point to the topology node states and timeline rather than clicking around.
 
-## 2:30–3:15 — Unsafe incident
+## 2:45–3:15 — Database Evidence Gate
 
-**Show:** Click **Trigger unsafe incident** once.
+**Show:** Database Evidence Gate panel.
 
-“Now the database reports a checksum mismatch suggesting corruption. The agent still investigates, but a destructive database action is outside its authority.”
+“The approved request also includes database maintenance. Backup and database health pass. WEB01 is on the target version. But WEB02 is healthy on the previous version, so target-version redundancy fails.”
 
-Point out:
+“The gate blocks the action. Gemini receives the evidence, replans, and safely defers database maintenance. The database remains unchanged.”
 
-- Database health/metrics/log evidence.
-- Corruption runbook match.
-- Red policy event blocking automatic remediation.
-- Escalated status and recommended next steps.
-- Database restart count remains zero.
+## 3:15–3:35 — Audit report
 
-“Safe autonomy means acting decisively when bounded and preserving evidence when it is not.”
+**Show:** Final outcome panel, then Firestore Data.
 
-## 3:15–3:40 — Durable history
+“The final report records the original request, plan, dependency graph, evidence, actions, verification, rollback, blocked operation, final topology, short decision summaries, and follow-up.”
 
-**Show:** Google Cloud Console → Firestore → Data → `incidents`, then `agent_events`.
+Open `maintenance_runs`, `maintenance_events`, and `action_executions`. Show the shared maintenance ID and action IDs. Do not show credentials or unrelated project data.
 
-Open the two incident documents. Show final statuses, evidence, actions, verification/escalation, timestamps, tool names, and common incident IDs. Do not show credentials or unrelated project data.
+## 3:35–3:50 — Google Cloud proof
 
-## 3:40–3:55 — Proof of Google Cloud
+Show preloaded screens quickly:
 
-Quickly show these preloaded screens:
+1. **Cloud Run → autonomous-maintenance-0317:** green revision, service URL, min instances 0, max 2.
+2. **Logs Explorer:** structured event with maintenance ID and a Gemini planning/replanning summary.
+3. **Pub/Sub → maintenance-worker:** delivery activity and `/api/events/pubsub` endpoint.
+4. **Vertex AI monitoring/logs:** visible `gemini-3.5-flash` request evidence.
 
-1. **Cloud Run → incident-response-agent → Details:** green deployment, service URL, region, scale-to-zero settings.
-2. **Cloud Run → Logs:** a JSON `tool_call` entry containing the incident ID and a successful Vertex-backed workflow entry.
-3. **Pub/Sub → Subscriptions → incident-worker:** delivery activity and push endpoint ending in `/api/events/pubsub`.
-4. If available, **Vertex AI usage/monitoring:** requests for `gemini-3.5-flash`.
+Do not claim Vertex proof unless the model/request is visible.
 
-Never claim a screen proves Vertex usage if the model ID/request is not visible.
+## 3:50–4:00 — Finish
 
-## 3:55–4:00 — Close
+“03:17 doesn't automate the happy path. It handles what happens when the happy path breaks.”
 
-“AfterAlert turns an alert into a safe, verified outcome—not another message for an operator to process.”
+“Sleep through the maintenance window.”
 
 ## Recording checklist
 
-- [ ] Cloud Run URL is visible and responds before recording.
-- [ ] Production footer says `adk / firestore`.
-- [ ] Both demo paths were rehearsed after the latest deployment.
-- [ ] Firestore and log tabs are filtered to the demo project.
-- [ ] Browser zoom makes incident text legible at 1080p.
-- [ ] Recording finishes below 4:00.
-- [ ] No secrets, emails, billing details, or unrelated project names are visible.
+- [ ] Production footer shows `adk planner / firestore state`.
+- [ ] All nodes start healthy and both web versions start at 1.0.0.
+- [ ] Demo pacing shows every lifecycle state clearly.
+- [ ] WEB02 rollback and database blocked gate are legible at 1080p.
+- [ ] Firestore, Cloud Run, Pub/Sub, and Vertex proof tabs are prefiltered.
+- [ ] No emails, billing data, credentials, or unrelated project information is visible.
+- [ ] Recording ends before 4:00.
+
