@@ -12,6 +12,8 @@ Repository: [Zachiran42/0317-autonomous-maintenance](https://github.com/Zachiran
 
 Live demo: [autonomous-maintenance-0317](https://autonomous-maintenance-0317-iywxkz3msa-ew.a.run.app)
 
+License: [MIT](LICENSE)
+
 ## The problem
 
 Traditional infrastructure automation assumes that the runbook will work. Real maintenance windows do not.
@@ -90,7 +92,7 @@ Cloud Logging records Gemini 3.5 Flash requests through the Vertex AI backend, w
 
 See [the complete cloud proof](docs/CLOUD_PROOF.md) and [all submission captures](docs/screenshots/).
 
-Watch the [2:17 captioned production demonstration](docs/video/0317-demo-captioned.mp4), or use the [silent master](docs/video/0317-demo-silent.mp4) with the editable [English subtitle source](docs/video/0317-demo-en.srt).
+Watch the [2:37 Devpost-ready demonstration with Google Cloud proof](docs/video/0317-devpost-final.mp4). The [silent master](docs/video/0317-demo-silent.mp4), shorter [captioned cut](docs/video/0317-demo-captioned.mp4), and editable [final English subtitle source](docs/video/0317-devpost-en.srt) are also retained.
 
 ## Architecture
 

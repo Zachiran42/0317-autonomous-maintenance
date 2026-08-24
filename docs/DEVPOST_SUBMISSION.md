@@ -74,4 +74,5 @@ Gemini 3.5 Flash, Vertex AI, Google Agent Development Kit, Cloud Run, Firestore,
 - [x] Firestore persisted run, event, action, and report records.
 - [x] Pub/Sub push delivery completed through the deployed subscription.
 - [x] Capture polished screenshots of the verified cloud evidence.
+- [x] Produce a sub-four-minute English-captioned demo with visible Google Cloud proof.
 - [ ] Add repository URL, demo video, and optional technical article/social links.

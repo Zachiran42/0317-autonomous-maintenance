@@ -1,6 +1,6 @@
 # Four-Minute Demo Script
 
-> A corrected 2:17 production take is now available as `video/0317-demo-silent.mp4`. Its synchronized English subtitle source is `video/0317-demo-en.srt`; the captions follow only observable UI states from run `mw-842e8490dd53`.
+> A corrected 2:17 production take is available as `video/0317-demo-silent.mp4`. The 2:37 final cut, `video/0317-devpost-final.mp4`, appends visible Cloud Run, Firestore, Pub/Sub, Vertex AI, and correlated-log proof. Its synchronized English subtitle source is `video/0317-devpost-en.srt`; the captions follow only observable UI and cloud evidence from the verified runs.
 
 Target runtime: **3:42**, leaving an 18-second safety margin. Record at 1080p with the browser zoom set so the topology, Evidence Gate, timeline, and final report remain legible. Use the deployed Cloud Run service and preload every proof tab before recording.
 
