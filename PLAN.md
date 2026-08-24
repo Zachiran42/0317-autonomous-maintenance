@@ -39,16 +39,15 @@ The existing hackathon codebase was audited at commit `1adecd1` before migration
 - [x] Produce a synchronized English-captioned submission cut.
 - [x] Add an MIT license and verify the official Devpost submission requirements.
 - [x] Publish the final demonstration publicly on YouTube.
+- [x] Complete and submit the Devpost entry with architecture, media gallery, hosted demo, repository, and video.
 - [ ] Add multimodal request ingestion only if all core proof is stable.
 
 ## Remaining work ordered by judging impact
 
-1. Add the public YouTube URL to the Devpost submission form.
-2. Review the final cut and optionally add voice-over before upload.
-3. Add credible public problem evidence or anonymized operator interviews.
-4. Optional PDF/image change-request extraction.
+1. Preserve the submitted repository, video, and linked materials until judging is complete.
+2. Add credible public problem evidence or anonymized operator interviews only through a separate post-submission branch or fork.
+3. Optional PDF/image change-request extraction after the judging freeze.
 
 ## External blockers
 
 - Further billable Google Cloud operations require explicit cost approval.
-- Devpost media upload and final submission require the submitter's account.

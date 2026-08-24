@@ -28,11 +28,13 @@ Official deadline: **2026-08-31 at 5:00 PM PDT** (**2026-09-01 at 02:00 CEST / P
 ## Actions requiring the submitter
 
 - [x] Upload `video/0317-devpost-final.mp4` publicly to YouTube: https://youtu.be/W3wTHvAmYUU
-- [ ] Add the public video URL to the Devpost submission.
-- [ ] Confirm Devpost registration and eligibility.
-- [ ] Paste the prepared English description from `DEVPOST_SUBMISSION.md`.
-- [ ] Add the live URL, repository URL, architecture diagram, and screenshots.
-- [ ] Submit before the official deadline.
+- [x] Add the public video URL to the Devpost submission.
+- [x] Confirm Devpost registration and eligibility.
+- [x] Paste the prepared English description from `DEVPOST_SUBMISSION.md`.
+- [x] Add the live URL, repository URL, architecture diagram, thumbnail, and five captioned screenshots.
+- [x] Submit before the official deadline.
+
+Submitted project: https://devpost.com/software/03-17-autonomous-maintenance
 
 ## Optional scoring opportunities
 
