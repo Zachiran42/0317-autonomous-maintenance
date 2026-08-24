@@ -1,5 +1,7 @@
 # Devpost Submission Draft
 
+Demo video: https://youtu.be/W3wTHvAmYUU
+
 > Local validation and real cloud execution are documented separately. See `CLOUD_PROOF.md` for the verified production run and retain only claims supported by visible submission evidence.
 
 ## Inspiration

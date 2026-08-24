@@ -38,11 +38,12 @@ The existing hackathon codebase was audited at commit `1adecd1` before migration
 - [x] Capture Google Cloud proof and record a sub-four-minute silent demo cut.
 - [x] Produce a synchronized English-captioned submission cut.
 - [x] Add an MIT license and verify the official Devpost submission requirements.
+- [x] Publish the final demonstration publicly on YouTube.
 - [ ] Add multimodal request ingestion only if all core proof is stable.
 
 ## Remaining work ordered by judging impact
 
-1. Upload the final video publicly to YouTube or Vimeo and add its URL to Devpost.
+1. Add the public YouTube URL to the Devpost submission form.
 2. Review the final cut and optionally add voice-over before upload.
 3. Add credible public problem evidence or anonymized operator interviews.
 4. Optional PDF/image change-request extraction.
