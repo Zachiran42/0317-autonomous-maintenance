@@ -12,7 +12,7 @@ type Node = {
   version: string; desired_version: string; in_load_balancer: boolean;
   error_rate: number; latency_ms: number;
 }
-type Topology = { nodes: Node[]; edges: string[][] }
+type Topology = { nodes: Node[]; edges: { source: string; target: string }[] }
 type Evidence = { key: string; label: string; passed: boolean; observed: unknown; required: unknown }
 type Gate = { gate: string; target: string; outcome: 'pass' | 'fail'; summary: string; evidence: Evidence[] }
 type Step = { id: string; order: number; target: string; action: string; objective: string; status: string; decision_summary?: string }
@@ -176,4 +176,3 @@ export function App() {
     <footer><span>Google Cloud Run · Pub/Sub · Firestore · Vertex AI · Google ADK</span><span>{config?.agent_runtime || 'local'} planner / {config?.persistence_backend || 'memory'} state</span></footer>
   </main>
 }
-

@@ -63,8 +63,11 @@ class Simulator:
             return {
                 "nodes": [node.model_dump(mode="json") for node in self._nodes.values()],
                 "edges": [
-                    ["load-balancer", "web01"], ["load-balancer", "web02"],
-                    ["web01", "worker"], ["web02", "worker"], ["worker", "database"],
+                    {"source": "load-balancer", "target": "web01"},
+                    {"source": "load-balancer", "target": "web02"},
+                    {"source": "web01", "target": "worker"},
+                    {"source": "web02", "target": "worker"},
+                    {"source": "worker", "target": "database"},
                 ],
             }
 
@@ -207,4 +210,3 @@ class Simulator:
                 "target": node_id, "passed": passed, "version": node.version,
                 "health": node.health, "in_load_balancer": node.in_load_balancer,
             }
-

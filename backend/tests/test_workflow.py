@@ -35,7 +35,8 @@ def test_dependency_discovery(runtime):
     topology = runtime.simulator.topology()
     nodes = {node["id"]: node for node in topology["nodes"]}
     assert nodes["web01"]["dependencies"] == ["worker", "database"]
-    assert ["worker", "database"] in topology["edges"]
+    assert {"source": "worker", "target": "database"} in topology["edges"]
+    assert all(isinstance(edge, dict) for edge in topology["edges"])
 
 
 @pytest.mark.asyncio
@@ -156,4 +157,3 @@ async def test_complete_golden_scenario(runtime):
     assert result.availability_preserved is True
     assert result.report["service_availability_preserved"] is True
     assert result.report["outcome"] == "completed_with_warnings"
-

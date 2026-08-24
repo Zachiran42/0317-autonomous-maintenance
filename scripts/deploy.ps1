@@ -19,11 +19,21 @@ if ($confirmation -ne "DEPLOY") { throw "Deployment cancelled." }
 gcloud config set project $ProjectId
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com aiplatform.googleapis.com firestore.googleapis.com pubsub.googleapis.com
 
-gcloud pubsub topics describe maintenance-events --project $ProjectId 2>$null
-if ($LASTEXITCODE -ne 0) { gcloud pubsub topics create maintenance-events --project $ProjectId }
+function Test-GcloudResource {
+    param([scriptblock]$Command)
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = "SilentlyContinue"
+    & $Command 2>$null | Out-Null
+    $exists = $LASTEXITCODE -eq 0
+    $ErrorActionPreference = $previousPreference
+    return $exists
+}
 
-gcloud firestore databases describe --database="(default)" --project $ProjectId 2>$null
-if ($LASTEXITCODE -ne 0) {
+if (-not (Test-GcloudResource { gcloud pubsub topics describe maintenance-events --project $ProjectId })) {
+    gcloud pubsub topics create maintenance-events --project $ProjectId
+}
+
+if (-not (Test-GcloudResource { gcloud firestore databases describe --database="(default)" --project $ProjectId })) {
     gcloud firestore databases create --database="(default)" --location=$FirestoreLocation --type=firestore-native --project $ProjectId
 }
 
@@ -40,8 +50,7 @@ gcloud run deploy $ServiceName `
 
 $serviceUrl = gcloud run services describe $ServiceName --region $Region --format="value(status.url)"
 $subscription = "maintenance-worker"
-gcloud pubsub subscriptions describe $subscription --project $ProjectId 2>$null
-if ($LASTEXITCODE -eq 0) {
+if (Test-GcloudResource { gcloud pubsub subscriptions describe $subscription --project $ProjectId }) {
     gcloud pubsub subscriptions update $subscription --push-endpoint="$serviceUrl/api/events/pubsub" --project $ProjectId
 } else {
     gcloud pubsub subscriptions create $subscription --topic=maintenance-events --push-endpoint="$serviceUrl/api/events/pubsub" --ack-deadline=300 --project $ProjectId
