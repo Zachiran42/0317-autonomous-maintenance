@@ -2,6 +2,10 @@
 
 Verified on 2026-08-24 in project `autonomous-maintenance-0317`.
 
+## Evidence boundary
+
+This document proves revision `autonomous-maintenance-0317-00002-962` and its recorded run only. The later dependency-aware validator/scheduler, structured executable replans, measured availability events, second simulator scenario, and data-driven outcome panel are verified by local tests and GitHub CI. They are **not yet claimed as deployed production evidence** until a new revision and run are explicitly recorded here.
+
 ## Deployment
 
 - Public service: <https://autonomous-maintenance-0317-iywxkz3msa-ew.a.run.app>

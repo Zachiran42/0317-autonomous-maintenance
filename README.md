@@ -127,12 +127,15 @@ See [the detailed architecture](docs/ARCHITECTURE.md) and [renderable SVG](docs/
 ## Why this is agentic—not a deployment script
 
 - Gemini uses Google ADK tools to inspect the request, topology, health, metrics, logs, runbooks, history, and capacity.
-- Gemini returns a structured initial plan rather than receiving a hard-coded transcript.
-- Verification observations are returned to Gemini for replanning.
-- The executor chooses the next eligible plan step from persisted state.
-- Evidence Gate rejection is returned as an observation; the planner explains and defers the database step.
+- Gemini may create different valid plans based on the approved request and observed state; Python does not require one exact golden sequence.
+- A dedicated semantic validator checks target/action combinations, approved scope, explicit dependencies, cycles, serialization, and terminal reporting.
+- The executor schedules the next eligible step from persisted dependency and outcome state rather than iterating over a fixed target list.
+- Verification failures and Evidence Gate rejections return to Gemini as observations; structured replans add, revise, or defer actual executable steps.
+- A proposed rollback becomes a plan objective, but ownership, rollback eligibility, Evidence Gates, tool scope, and verification remain deterministic.
 - Tool execution, safety, rollback eligibility, and state transitions remain deterministic.
 - The local planner is used only for deterministic, zero-token tests and rehearsal; deployed mode uses ADK/Vertex AI.
+
+The golden demo remains deterministic for reproducibility, but its execution engine is not tied to a hard-coded target sequence. Gemini emits a validated dependency-aware plan, and replanning changes the persisted remaining workflow.
 
 No private chain-of-thought is shown or stored. Only objectives, tool calls, observations, concise decision summaries, policy outcomes, and results are exposed.
 
@@ -240,7 +243,8 @@ Cloud deployments should use a dedicated least-privilege service identity with V
 | `GET /api/maintenance/{id}` | Plan, gates, actions, and report |
 | `GET /api/maintenance/{id}/events` | Auditable event timeline |
 | `POST /api/demo/start` | Seed the golden request |
-| `POST /api/demo/reset` | Restore synthetic infrastructure |
+| `POST /api/demo/reset?scenario=golden` | Restore the golden synthetic scenario |
+| `POST /api/demo/reset?scenario=degraded-preflight` | Seed unsafe pre-flight health for refusal testing |
 | `POST /api/events/pubsub` | Pub/Sub push worker |
 
 ## Tests and validation
@@ -252,7 +256,7 @@ cd frontend && npm ci && npm run build
 docker build -t autonomous-maintenance-0317 .
 ```
 
-The 20-test suite covers request ingestion, dependency discovery, structured planning, allowed and denied gates, WEB01 success, WEB02 failure, rollback, rollback verification, DB refusal, replanning, recoverable invalid planner reads, idempotency, persistence, invalid state transitions, forbidden actions, backend endpoints, duplicate events, and the complete golden scenario. Unit tests mock model planning with a deterministic planner and consume no tokens.
+The 35-test deterministic suite covers alternative valid plans, invalid and cyclic dependency graphs, dependency-aware scheduling, structured plan revisions, both simulator scenarios, measured availability, forced outage memory, request ingestion, gates, rollback ownership and verification, DB refusal, idempotency, persistence, forbidden actions, backend endpoints, duplicate events, and the complete golden scenario. Tests replace model calls with deterministic fixtures and consume no tokens.
 
 ## Safety and resilience
 
@@ -287,7 +291,7 @@ Use [CAPTURE_CHECKLIST.md](docs/CAPTURE_CHECKLIST.md) for the exact product and 
 
 - The infrastructure is synthetic and cannot affect an employer or real production system.
 - The process-local simulator is intentionally small; Firestore persists workflow/audit state, but simulator state itself should move to a transactional persistent adapter for multi-instance production use.
-- Real Vertex AI, Firestore, Pub/Sub, and Cloud Run execution is documented in [CLOUD_PROOF.md](docs/CLOUD_PROOF.md).
+- The previous verified Vertex AI, Firestore, Pub/Sub, and Cloud Run execution is documented in [CLOUD_PROOF.md](docs/CLOUD_PROOF.md). The dependency-aware hardening is locally and CI verified but requires a new deployment before it can be claimed as production evidence.
 - Pub/Sub push authentication and transactional run claiming are documented production-hardening items.
 - PDF/image change-request ingestion is deferred until the core submission proof and video are complete.
 
@@ -302,7 +306,7 @@ Use [CAPTURE_CHECKLIST.md](docs/CAPTURE_CHECKLIST.md) for the exact product and 
 - Uses no OpenAI model at application runtime.
 - Contains no employer names, private infrastructure, credentials, tickets, logs, or proprietary data.
 
-Cloud-dependent claims are backed by the verified production run and captures documented in [CLOUD_PROOF.md](docs/CLOUD_PROOF.md).
+Cloud-dependent claims for revision `00002-962` are backed by the production run and captures in [CLOUD_PROOF.md](docs/CLOUD_PROOF.md). New dependency-aware hardening claims remain explicitly local/CI evidence until redeployment.
 
 ## AI development disclosure and reused work
 

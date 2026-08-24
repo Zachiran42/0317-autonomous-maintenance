@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
   <title id="title">03:17 autonomous maintenance architecture</title>
-  <desc id="desc">Event-driven Google Cloud architecture separating Gemini planning from deterministic evidence-gated execution.</desc>
+  <desc id="desc">Event-driven Google Cloud architecture separating Gemini planning, semantic plan validation, dependency scheduling, and deterministic evidence-gated execution.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071014"/><stop offset="1" stop-color="#0d1918"/></linearGradient>
     <filter id="shadow"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".35"/></filter>
@@ -20,13 +20,13 @@
   <path class="flow" d="M300 205H375"/><path class="flow" d="M610 205H685"/><path class="flow" d="M920 205H995"/>
 
   <rect class="box agent" x="1000" y="330" width="230" height="100"/><text class="label" x="1115" y="370">Google ADK + Gemini</text><text class="small" x="1115" y="395">planner / replanner · Vertex AI</text>
-  <rect class="box gate" x="690" y="330" width="230" height="100"/><text class="label" x="805" y="370">Evidence Gate</text><text class="small" x="805" y="395">deterministic authority</text>
-  <rect class="box" x="380" y="330" width="230" height="100"/><text class="label" x="495" y="370">Isolated Tools</text><text class="small" x="495" y="395">validated · idempotent · logged</text>
+  <rect class="box gate" x="690" y="330" width="230" height="100"/><text class="label" x="805" y="370">Plan Validator + Scheduler</text><text class="small" x="805" y="395">scope · dependencies · cycles</text>
+  <rect class="box" x="380" y="330" width="230" height="100"/><text class="label" x="495" y="370">Evidence-Gated Tools</text><text class="small" x="495" y="395">authorized · idempotent · logged</text>
   <path class="flow" d="M1115 250V325"/><path class="flow" d="M1000 380H925"/><path class="flow" d="M690 380H615"/>
-  <text x="942" y="363" class="small">propose</text><text x="628" y="363" class="pass">PASS</text><text x="805" y="314" class="fail">FAIL → REPLAN / DEFER</text>
+  <text x="942" y="363" class="small">plan delta</text><text x="628" y="363" class="pass">ELIGIBLE</text><text x="805" y="314" class="fail">REJECT → STRUCTURED REPLAN</text>
 
   <rect class="box" x="380" y="520" width="230" height="120"/><text class="label" x="495" y="558">Infrastructure Simulator</text><text class="small" x="495" y="583">LB · WEB01 · WEB02</text><text class="small" x="495" y="603">WORKER · DATABASE</text>
-  <rect class="box danger" x="690" y="520" width="230" height="120"/><text class="label" x="805" y="558">Verification + Rollback</text><text class="small" x="805" y="583">health · synthetic · errors</text><text class="small" x="805" y="603">restore · verify</text>
+  <rect class="box danger" x="690" y="520" width="230" height="120"/><text class="label" x="805" y="558">Evidence Gates + Rollback</text><text class="small" x="805" y="583">health · availability · ownership</text><text class="small" x="805" y="603">authorize · restore · verify</text>
   <rect class="box cloud" x="1000" y="520" width="230" height="120"/><text class="label" x="1115" y="558">Firestore Audit</text><text class="small" x="1115" y="583">runs · events · actions</text><text class="small" x="1115" y="603">reports</text>
   <path class="flow" d="M495 430V515"/><path class="flow" d="M610 580H685"/><path class="flow" d="M920 580H995"/>
   <path class="flow" d="M1115 520V470H495V435"/>

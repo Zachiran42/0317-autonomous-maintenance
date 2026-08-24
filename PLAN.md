@@ -29,7 +29,8 @@ The existing hackathon codebase was audited at commit `1adecd1` before migration
 - [x] Add Gemini/ADK planning and replanning with deterministic execution authority.
 - [x] Migrate API, Firestore collections, Pub/Sub names, observability, and idempotency keys.
 - [x] Build live topology, maintenance plan, Evidence Gate, timeline, and report UX.
-- [x] Expand to 20 passing backend tests and validate the frontend build.
+- [x] Expand to 35 passing backend tests and validate frontend lint/build.
+- [x] Add semantic plan validation, dependency-aware scheduling, structured replans, measured availability, and a degraded-preflight scenario.
 - [x] Make invalid planner read targets recoverable and keep reset state separate from Firestore history.
 - [x] Rewrite README and submission documents; add safety and migration notes.
 - [x] Build and smoke-test the final renamed Docker image.

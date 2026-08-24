@@ -10,7 +10,9 @@ flowchart TD
     WORKER --> EXEC[Safe maintenance executor]
     EXEC --> ADK[Google ADK planner / replanner]
     ADK --> GEMINI[Gemini 3.5 Flash<br/>Vertex AI]
-    GEMINI -->|structured plan| EXEC
+    GEMINI -->|structured plan delta| VALIDATE[Semantic plan validator]
+    VALIDATE --> SCHEDULE[Dependency-aware scheduler]
+    SCHEDULE --> EXEC
     EXEC --> GATE[Evidence Gate engine]
     GATE -->|PASS| TOOLS[Scoped tools]
     GATE -->|FAIL observation| ADK
@@ -30,6 +32,7 @@ flowchart TD
 | Component | Responsible for | Never responsible for |
 |---|---|---|
 | Gemini / ADK | Interpreting requests, selecting observations, structured planning, replanning, concise explanations | Direct authority over dangerous changes |
+| Plan validator | Approved scope, target/action semantics, dependency integrity, cycle rejection, report ordering | Current operational safety |
 | Safe executor | Selecting the next eligible persisted step, bounded loop, workflow status | Inventing evidence |
 | Evidence Gate | Thresholds, authorization, rollback eligibility, fail-closed decisions | Natural-language reasoning |
 | Tools | Validated state reads/mutations, idempotency, structured results, errors | Arbitrary shell or unrestricted infrastructure access |
@@ -39,17 +42,20 @@ flowchart TD
 ## Stateful execution
 
 ```text
-RECEIVED → PLANNING → PREFLIGHT → READY → EXECUTING
+RECEIVED → PLANNING → VALIDATED PLAN → PREFLIGHT → READY → EXECUTING
                                              |
                                              v
                                          VERIFYING
                                          /       \
                                       PASS       FAIL
                                        |           |
-                                  EXECUTING   ROLLING_BACK
+                                  EXECUTING   REPLANNING
                                                    |
                                                    v
-                                              REPLANNING
+                                          VALIDATED ROLLBACK STEP
+                                                   |
+                                                   v
+                                             ROLLING_BACK
                                                    |
                                                    v
                                      COMPLETED_WITH_WARNINGS
@@ -59,9 +65,13 @@ Every transition is validated against an explicit transition map. Invalid transi
 
 ## Dynamic planning
 
-The deployed planner is a Google ADK agent using Gemini. It may call request, topology, health, metric, log, runbook, history, and capacity tools. It must submit a structured plan through `submit_maintenance_plan`. Target/action combinations are validated before execution.
+The production planner adapter is a Google ADK agent using Gemini. It may call request, topology, health, metric, log, runbook, history, capacity, and availability tools. It submits stable step IDs, explicit dependencies, targets, actions, and objectives through `submit_maintenance_plan`.
 
-After failed verification, the executor sends the observed synthetic result, logs, and metrics back to the planner. The resulting concise replan is persisted. After the database gate rejection, the failed evidence is again returned to the planner and the database step is deferred.
+`PlanValidator` accepts any semantically admissible plan within the approved request scope. It rejects unknown/restricted actions, unknown targets, missing/self/cyclic dependencies, parallel rolling updates, database steps without declared web dependencies, and reports that are not terminal. It does not evaluate live safety.
+
+The scheduler selects pending steps whose dependency outcomes make that specific action eligible. Maintenance children cannot run after blocked/deferred dependencies, while the report may run after all actionable work reaches any terminal outcome.
+
+After failed verification, the executor sends the observable synthetic result, logs, and metrics back to the planner. The structured replan adds a rollback objective and updates downstream dependencies in persisted state. Deterministic ownership and rollback Evidence Gates still authorize the tool. After the database gate rejection, a second structured replan changes the database step itself to `deferred`, making the report the next eligible step. Both revisions emit `plan_revised` with old plan, updated plan, concise summary, and triggering observation.
 
 Tests substitute `LocalPlanner` for Gemini. It implements the same planner interface but is explicitly identified as a deterministic test runtime.
 
@@ -76,6 +86,10 @@ The engine evaluates four visible gates:
 5. **Database change:** backup, DB health, both target versions healthy, full redundancy, global error threshold.
 
 The golden run intentionally fails the last gate because WEB02 was restored to its previous version.
+
+## Availability proof
+
+The simulator measures healthy serving web nodes, the required serving-node count, serving targets, and global error rate. The executor persists an `availability_check` after initial observation and every important mutation or verification. `availability_preserved` is monotonic: once any observation is unavailable it can never return to `true`. The final report is derived from the persisted observations rather than the model default.
 
 ## Idempotency and resumption
 
@@ -99,7 +113,6 @@ Before multi-instance production use, run claiming should be upgraded to a Fires
 
 ## Observability and privacy
 
-Events include `maintenance_id`, `action_id`, event type, target, status, timestamp, tool, and structured evidence. They expose actions and observations, never private chain-of-thought.
+Events include `maintenance_id`, `action_id`, actor, event type, target, status, timestamp, tool, and structured evidence. They expose actions and observations, never private chain-of-thought. The UI renders final outcomes from the live plan/report and visually identifies agent, policy, action, tool, and verification events.
 
 See [SAFETY_MODEL.md](SAFETY_MODEL.md) and [architecture.svg](architecture.svg).
-

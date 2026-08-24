@@ -2,6 +2,8 @@
 
 > A corrected 2:17 production take is available as `video/0317-demo-silent.mp4`. The 2:37 final cut, `video/0317-devpost-final.mp4`, appends visible Cloud Run, Firestore, Pub/Sub, Vertex AI, and correlated-log proof. Its synchronized English subtitle source is `video/0317-devpost-en.srt`; the captions follow only observable UI and cloud evidence from the verified runs.
 
+> The existing video remains valid evidence for Cloud Run revision `00002-962`. The final hardening adds visible dependency IDs, `PLAN REVISED`, measured availability events, and data-driven outcomes. Capture a replacement only after that revision is redeployed and verified; do not retroactively attribute these additions to the existing video.
+
 Target runtime: **3:42**, leaving an 18-second safety margin. Record at 1080p with the browser zoom set so the topology, Evidence Gate, timeline, and final report remain legible. Use the deployed Cloud Run service and preload every proof tab before recording.
 
 ## Before recording
@@ -50,6 +52,8 @@ Target runtime: **3:42**, leaving an 18-second safety margin. Record at 1080p wi
 “Now WEB02 drains and updates. Readiness succeeds, but its functional transaction fails: the observed error rate is 24 percent, above the allowed 5 percent.”
 
 “The agent collects logs and metrics. Gemini replans, and the rollback gate proves that this run owns a valid recovery point.”
+
+“The replan changes executable state: a rollback objective appears in the dependency-aware plan. Gemini proposed it; deterministic policy still authorizes it.”
 
 “WEB02 returns to version 1.0.0, becomes healthy, rejoins the load balancer, and passes rollback verification. No human intervened, and availability remained preserved.”
 

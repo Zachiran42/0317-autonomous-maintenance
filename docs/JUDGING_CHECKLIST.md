@@ -22,6 +22,10 @@
 - [x] Firestore, Pub/Sub, and Cloud Run production adapters exist.
 - [x] Structured logs/events correlate maintenance and action IDs.
 - [x] Bounded plan validation retries exist.
+- [x] Dedicated semantic validator accepts alternative scoped plans and rejects cycles, missing dependencies, unknown targets, and restricted actions.
+- [x] Executor schedules eligible work from dependency outcomes instead of a fixed sequence.
+- [x] Structured replans change persisted workflow state after WEB02 failure and database rejection.
+- [x] Availability is measured after mutations and persisted as monotonic audit evidence.
 - [x] Verify real ADK planning/replanning through Vertex AI.
 - [ ] Add Firestore transactional run claiming before multi-instance load tests.
 - [ ] Configure authenticated Pub/Sub push and a dead-letter topic for production hardening.
@@ -33,7 +37,9 @@
 - [x] Plan visibly shows completed, rolled-back, and deferred steps.
 - [x] Evidence panel shows individual machine facts and the blocking decision.
 - [x] Final report gives a concise submission-ready outcome.
-- [x] Twenty backend tests and frontend production build pass.
+- [x] Thirty-five backend tests, frontend lint, and frontend production build pass locally.
+- [x] Golden and degraded-preflight scenarios pass without paid model calls.
+- [x] Final outcome panel is derived from live plan/report data and exposes plan revision.
 - [x] Final renamed Docker image and smoke test pass.
 - [x] Cloud Run deployment works on the public URL.
 - [x] Firestore, Pub/Sub, Vertex, and Cloud Run execution evidence is recorded.

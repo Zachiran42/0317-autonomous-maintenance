@@ -2,7 +2,7 @@
 
 Demo video: https://youtu.be/W3wTHvAmYUU
 
-> Local validation and real cloud execution are documented separately. See `CLOUD_PROOF.md` for the verified production run and retain only claims supported by visible submission evidence.
+> Local validation and real cloud execution are documented separately. `CLOUD_PROOF.md` records the previous verified production revision. The final dependency-aware hardening is validated locally and in CI but must be redeployed before being described as new cloud proof.
 
 ## Inspiration
 
@@ -24,6 +24,8 @@ In the golden demonstration, WEB01 updates successfully. WEB02 starts but fails 
 
 - Google ADK presents request, topology, health, metric, log, runbook, history, and capacity tools to Gemini.
 - Gemini 3.5 Flash through Vertex AI creates the structured plan and replans after failures/gate rejection.
+- Gemini is free to emit different approved-scope plans with explicit dependencies; a semantic validator rejects malformed, cyclic, restricted, or unsafe plan structures.
+- Structured replans alter persisted executable state: the WEB02 failure adds a validated rollback objective and the database rejection changes its step to deferred.
 - A FastAPI executor advances a validated maintenance state machine.
 - Python Evidence Gates enforce prerequisites, thresholds, rollback ownership, and restricted actions.
 - A real stateful simulator models load balancing, five nodes, versions, health, metrics, logs, snapshots, and rollback points.
@@ -48,7 +50,7 @@ The third challenge was showing useful agent activity without exposing private r
 - Gemini-driven structured planning/replanning with deterministic action authority.
 - Idempotent tools and duplicate event protection.
 - A signature Evidence Gate UI that explains why the system did—or did not—act.
-- Twenty deterministic tests covering the entire golden scenario, recoverable planner-read errors, and safety boundaries.
+- Thirty-five deterministic tests covering alternative plans, dependency validation/scheduling, structured replanning, two scenarios, measured availability, the entire golden scenario, and safety boundaries.
 
 ## What we learned
 
