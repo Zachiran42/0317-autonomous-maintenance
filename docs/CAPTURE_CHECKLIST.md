@@ -1,6 +1,19 @@
 # Submission Capture Checklist
 
-Use 16:9 captures at 1920x1080 or higher. Keep the project name visible where it proves Google Cloud usage, but crop all account, billing, email, token, and credential information.
+Use 16:9 captures, preferably at 1920x1080 and never below 1280x720. Keep the project name visible where it proves Google Cloud usage, but crop all account, billing, email, token, and credential information.
+
+## Captured evidence
+
+- [ ] P1 initial command center — requires a reset and must wait for explicit cost approval.
+- [x] P2 WEB02 functional verification failure — `screenshots/02-verification-failure.png`.
+- [x] P3 verified rollback and replan — `screenshots/03-verified-rollback.png`.
+- [x] P4 blocked database Evidence Gate — `screenshots/04-database-gate-blocked.png`.
+- [x] P5 final maintenance report — `screenshots/05-final-report.png`.
+- [x] G1 healthy Cloud Run revision with 100% traffic — `screenshots/06-cloud-run.png`.
+- [x] G2 persisted Firestore verification evidence — `screenshots/07-firestore-audit.png`.
+- [x] G3 active Pub/Sub push subscription and endpoint — `screenshots/08-pubsub-delivery.png`.
+- [x] G4 structured Cloud Run logs correlated by maintenance ID — `screenshots/10-structured-maintenance-logs.png`.
+- [x] G5 Gemini 3.5 Flash requests through the Vertex AI backend — `screenshots/09-vertex-gemini-proof.png`.
 
 ## Required product captures
 
@@ -50,15 +63,16 @@ Use predictable names before uploading:
 - `07-firestore-audit.png`
 - `08-pubsub-delivery.png`
 - `09-vertex-gemini-proof.png`
+- `10-structured-maintenance-logs.png`
 
 ## Final review
 
-- [ ] Every image is readable without browser zoom.
-- [ ] All product images belong to the same golden run where possible.
-- [ ] The displayed maintenance ID matches the evidence being claimed.
-- [ ] No billing balance, email, credential, token, request header, or unrelated resource is visible.
-- [ ] Images do not expose private chain-of-thought; concise decision summaries are acceptable.
-- [ ] Captions explain the outcome instead of merely naming the screen.
-- [ ] At least one image proves failure, one proves recovery, and one proves safe refusal.
+- [x] Every captured image is readable without browser zoom.
+- [x] All product images belong to the verified golden run.
+- [x] The displayed maintenance ID matches the correlated cloud evidence.
+- [x] No billing balance, email, credential, token, request header, or unrelated resource is visible.
+- [x] Images do not expose private chain-of-thought; concise decision summaries are acceptable.
+- [x] Captions explain the outcome instead of merely naming the screen.
+- [x] The set proves failure, recovery, and safe refusal.
 
 Capturing existing screens is read-only. Starting or resetting another production run may invoke billable cloud services and requires explicit cost approval first.

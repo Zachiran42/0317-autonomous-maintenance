@@ -78,6 +78,18 @@ The reproducible outcome is:
 
 The simulator does not fake UI status. Tools mutate backend node version, lifecycle state, health, error rate, logs, load-balancer membership, snapshots, and rollback points. The dashboard polls that real state.
 
+## Verified production evidence
+
+The deployed golden run completed on Google Cloud with availability preserved and zero human intervention.
+
+![03:17 verified rollback, database refusal, and final maintenance outcome](docs/screenshots/04-database-gate-blocked.png)
+
+Cloud Logging records Gemini 3.5 Flash requests through the Vertex AI backend, while the correlated maintenance logs retain the maintenance ID and tool outcomes.
+
+![Gemini 3.5 Flash requests through Vertex AI in Cloud Logging](docs/screenshots/09-vertex-gemini-proof.png)
+
+See [the complete cloud proof](docs/CLOUD_PROOF.md) and [all submission captures](docs/screenshots/).
+
 ## Architecture
 
 ```mermaid

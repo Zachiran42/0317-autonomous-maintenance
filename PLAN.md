@@ -39,8 +39,8 @@ The existing hackathon codebase was audited at commit `1adecd1` before migration
 
 ## Remaining work ordered by judging impact
 
-1. Capture polished Google Cloud screenshots for the submission.
-2. Rehearse and record the sub-four-minute video.
+1. Rehearse and record the sub-four-minute video.
+2. Capture the initial-state hero image during the approved recorded run.
 3. Add credible public problem evidence or anonymized operator interviews.
 4. Add a license and perform the submission-day rules check.
 5. Optional PDF/image change-request extraction.
