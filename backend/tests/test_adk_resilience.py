@@ -44,3 +44,18 @@ async def test_capacity_error_uses_safe_replan_fallback(runtime):
     assert any(step.action == "rollback" for step in result.updated_steps)
     assert "capacity was temporarily exhausted" in result.summary
     planner._run_planner.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_repeated_invalid_proposals_use_safe_fallback(runtime):
+    planner = AdkPlanner("gemini-test")
+    planner._run_planner = AsyncMock(  # type: ignore[method-assign]
+        side_effect=ValueError("report dependency missing")
+    )
+    run = MaintenanceRun(request="Update the web tier and database", approved=True)
+
+    plan, summary = await planner.create_plan(run, AsyncMock())
+
+    assert plan[-1].action == "create_report"
+    assert "failed deterministic validation" in summary
+    assert planner._run_planner.await_count == 2

@@ -169,9 +169,9 @@ class AdkPlanner(Planner):
         return "RESOURCE_EXHAUSTED" in message or "429" in message
 
     @staticmethod
-    def _fallback_summary(summary: str) -> str:
+    def _fallback_summary(summary: str, reason: str) -> str:
         return (
-            "Gemini/ADK was invoked but Vertex AI capacity was temporarily exhausted; "
+            f"Gemini/ADK was invoked but {reason}; "
             "the deterministic safe planner produced this executable fallback. "
             f"{summary}"
         )
@@ -288,11 +288,16 @@ class AdkPlanner(Planner):
             except Exception as exc:
                 if self._is_capacity_error(exc):
                     plan, summary = await self.capacity_fallback.create_plan(run, tools)
-                    return plan, self._fallback_summary(summary)
+                    return plan, self._fallback_summary(
+                        summary, "Vertex AI capacity was temporarily exhausted"
+                    )
                 if not isinstance(exc, (RuntimeError, ValueError)):
                     raise
                 last_error = exc
-        raise RuntimeError(f"Gemini plan failed validation after bounded retries: {last_error}")
+        plan, summary = await self.capacity_fallback.create_plan(run, tools)
+        return plan, self._fallback_summary(
+            summary, f"its proposals failed deterministic validation ({last_error})"
+        )
 
     async def replan(
         self, run: MaintenanceRun, observation: dict[str, Any], tools: MaintenanceTools
@@ -313,12 +318,18 @@ class AdkPlanner(Planner):
             except Exception as exc:
                 if self._is_capacity_error(exc):
                     result = await self.capacity_fallback.replan(run, observation, tools)
-                    result.summary = self._fallback_summary(result.summary)
+                    result.summary = self._fallback_summary(
+                        result.summary, "Vertex AI capacity was temporarily exhausted"
+                    )
                     return result
                 if not isinstance(exc, (RuntimeError, ValueError)):
                     raise
                 last_error = exc
-        raise RuntimeError(f"Gemini replan failed validation after bounded retries: {last_error}")
+        result = await self.capacity_fallback.replan(run, observation, tools)
+        result.summary = self._fallback_summary(
+            result.summary, f"its proposals failed deterministic validation ({last_error})"
+        )
+        return result
 
 
 class MaintenanceAgent(ABC):
