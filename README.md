@@ -90,6 +90,8 @@ Cloud Logging records Gemini 3.5 Flash requests through the Vertex AI backend, w
 
 See [the complete cloud proof](docs/CLOUD_PROOF.md) and [all submission captures](docs/screenshots/).
 
+Watch the [2:17 captioned production demonstration](docs/video/0317-demo-captioned.mp4), or use the [silent master](docs/video/0317-demo-silent.mp4) with the editable [English subtitle source](docs/video/0317-demo-en.srt).
+
 ## Architecture
 
 ```mermaid

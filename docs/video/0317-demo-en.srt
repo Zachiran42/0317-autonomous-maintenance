@@ -1,0 +1,47 @@
+1
+00:00:00,000 --> 00:00:08,000
+03:17 runs approved maintenance while operators sleep.
+
+2
+00:00:08,000 --> 00:00:18,000
+Gemini plans and replans. Deterministic Evidence Gates authorize every action.
+
+3
+00:00:18,000 --> 00:00:30,000
+One approved request starts the workflow through Pub/Sub and Cloud Run.
+
+4
+00:00:30,000 --> 00:00:44,000
+The agent discovers topology, health, capacity, runbooks, and rollback requirements.
+
+5
+00:00:44,000 --> 00:00:58,000
+WEB01 drains, updates to v1.1.0, passes verification, and rejoins the load balancer.
+
+6
+00:00:58,000 --> 00:01:12,000
+WEB02 updates, but its functional test fails even though readiness passed.
+
+7
+00:01:12,000 --> 00:01:26,000
+The agent collects logs and metrics, then Gemini replans from the observed failure.
+
+8
+00:01:26,000 --> 00:01:41,000
+The rollback gate verifies ownership of the recovery point before restoration.
+
+9
+00:01:41,000 --> 00:01:53,000
+WEB02 returns to v1.0.0, becomes healthy, and rollback verification passes.
+
+10
+00:01:53,000 --> 00:02:04,000
+The database gate blocks the next change because target-version redundancy is false.
+
+11
+00:02:04,000 --> 00:02:13,000
+Final outcome: WEB01 updated; WEB02 rolled back; database safely deferred.
+
+12
+00:02:13,000 --> 00:02:17,200
+Availability preserved. Human interventions: zero.

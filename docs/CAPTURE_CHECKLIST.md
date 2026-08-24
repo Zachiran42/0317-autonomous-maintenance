@@ -18,8 +18,10 @@ Use 16:9 captures, preferably at 1920x1080 and never below 1280x720. Keep the pr
 ## Recorded demo
 
 - [x] Silent sub-four-minute cut — `video/0317-demo-silent.mp4` (2 min 17 s).
+- [x] Captioned submission cut — `video/0317-demo-captioned.mp4` (2 min 17 s).
+- [x] English subtitle source — `video/0317-demo-en.srt`.
 - [x] Corrected production run `mw-842e8490dd53` completed with warnings: WEB01 updated, WEB02 rolled back and verified, database deferred, availability preserved, zero interventions.
-- [ ] Add narration or captions before the final Devpost upload.
+- [ ] Optionally add voice-over before the final Devpost upload.
 
 ## Required product captures
 

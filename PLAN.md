@@ -36,11 +36,12 @@ The existing hackathon codebase was audited at commit `1adecd1` before migration
 - [x] Verify real Vertex AI, Firestore, Pub/Sub, and Cloud Run execution.
 - [x] Rename GitHub repository to `0317-autonomous-maintenance` and complete final release checks.
 - [x] Capture Google Cloud proof and record a sub-four-minute silent demo cut.
+- [x] Produce a synchronized English-captioned submission cut.
 - [ ] Add multimodal request ingestion only if all core proof is stable.
 
 ## Remaining work ordered by judging impact
 
-1. Add narration/captions and rehearse the final Devpost video.
+1. Review the captioned cut and optionally add voice-over before the final Devpost upload.
 2. Add credible public problem evidence or anonymized operator interviews.
 3. Add a license and perform the submission-day rules check.
 4. Optional PDF/image change-request extraction.

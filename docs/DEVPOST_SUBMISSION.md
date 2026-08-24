@@ -73,5 +73,5 @@ Gemini 3.5 Flash, Vertex AI, Google Agent Development Kit, Cloud Run, Firestore,
 - [x] Gemini structured planning and replanning completed through the deployed ADK runtime.
 - [x] Firestore persisted run, event, action, and report records.
 - [x] Pub/Sub push delivery completed through the deployed subscription.
-- [ ] Capture polished screenshots of the verified cloud evidence.
+- [x] Capture polished screenshots of the verified cloud evidence.
 - [ ] Add repository URL, demo video, and optional technical article/social links.

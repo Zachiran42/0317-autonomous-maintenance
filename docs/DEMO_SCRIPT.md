@@ -1,5 +1,7 @@
 # Four-Minute Demo Script
 
+> A corrected 2:17 production take is now available as `video/0317-demo-silent.mp4`. Its synchronized English subtitle source is `video/0317-demo-en.srt`; the captions follow only observable UI states from run `mw-842e8490dd53`.
+
 Target runtime: **3:42**, leaving an 18-second safety margin. Record at 1080p with the browser zoom set so the topology, Evidence Gate, timeline, and final report remain legible. Use the deployed Cloud Run service and preload every proof tab before recording.
 
 ## Before recording
