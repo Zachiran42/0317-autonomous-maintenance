@@ -194,16 +194,11 @@ def apply_replan(
         existing = current.get(proposed.id)
         update = proposed.model_copy(deep=True)
         if existing and existing.status in immutable:
-            if (
-                existing.target != update.target
-                or existing.action != update.action
-                or existing.status != update.status
-            ):
+            if existing.target != update.target or existing.action != update.action:
                 raise PlanValidationError(
                     f"Cannot rewrite authoritative step outcome {proposed.id}"
                 )
-            update.status = existing.status
-            update.decision_summary = existing.decision_summary
+            update = existing.model_copy(deep=True)
         elif existing:
             update.status = existing.status
             update.decision_summary = existing.decision_summary

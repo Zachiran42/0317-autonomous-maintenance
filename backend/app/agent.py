@@ -280,9 +280,10 @@ class AdkPlanner(Planner):
     ) -> ReplanResult:
         objective = (
             f"Replan maintenance {run.id} after this observable result: {observation}. "
-            "Submit structured deltas that modify remaining executable plan state. Preserve completed "
-            "outcomes, never repeat completed work, and defer unsafe pending work. If rollback is the "
-            "safest objective, add a rollback step that still requires deterministic authorization."
+            "Submit only new or changed steps plus removed/deferred IDs as a structured delta. "
+            "Preserve completed outcomes, never repeat completed work, and defer unsafe pending work. "
+            "If rollback is the safest objective, add a rollback step that still requires "
+            "deterministic authorization."
         )
         last_error: Exception | None = None
         for _ in range(2):

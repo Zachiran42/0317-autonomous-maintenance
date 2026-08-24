@@ -1,7 +1,12 @@
 import pytest
 
-from app.models import PlanStep, StepStatus
-from app.plan_validation import PlanValidationError, PlanValidator, next_eligible_step
+from app.models import PlanStep, ReplanResult, StepStatus
+from app.plan_validation import (
+    PlanValidationError,
+    PlanValidator,
+    apply_replan,
+    next_eligible_step,
+)
 
 REQUEST = "Update the web tier and perform approved database maintenance"
 
@@ -112,3 +117,25 @@ def test_blocked_dependency_prevents_unsafe_child_but_not_terminal_report():
     plan[1].status = StepStatus.BLOCKED
     plan[2].status = StepStatus.DEFERRED
     assert next_eligible_step(plan).id == "final-report"
+
+
+def test_replan_cannot_rewrite_authoritative_outcome():
+    plan = golden_plan()
+    plan[0].status = StepStatus.COMPLETED
+    echoed = plan[0].model_copy(update={"status": StepStatus.PENDING})
+    revised = apply_replan(
+        plan,
+        ReplanResult(summary="Preserve completed work", updated_steps=[echoed]),
+        REQUEST,
+        PlanValidator(),
+    )
+    assert revised[0].status == StepStatus.COMPLETED
+
+    unsafe = echoed.model_copy(update={"action": "rollback"})
+    with pytest.raises(PlanValidationError, match="authoritative"):
+        apply_replan(
+            plan,
+            ReplanResult(summary="Unsafe rewrite", updated_steps=[unsafe]),
+            REQUEST,
+            PlanValidator(),
+        )
