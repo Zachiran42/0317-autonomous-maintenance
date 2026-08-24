@@ -1,5 +1,7 @@
 # 03:17
 
+[![Quality](https://github.com/Zachiran42/0317-autonomous-maintenance/actions/workflows/quality.yml/badge.svg)](https://github.com/Zachiran42/0317-autonomous-maintenance/actions/workflows/quality.yml)
+
 ## Autonomous Maintenance Window
 
 > **“Sleep through the maintenance window.”**
@@ -10,11 +12,15 @@ Built for the **Google / Devpost All Things Agentic Hackathon 2026**, targeting 
 
 Repository: [Zachiran42/0317-autonomous-maintenance](https://github.com/Zachiran42/0317-autonomous-maintenance)
 
+Devpost: [03:17 — Autonomous Maintenance](https://devpost.com/software/03-17-autonomous-maintenance)
+
 Live demo: [autonomous-maintenance-0317](https://autonomous-maintenance-0317-iywxkz3msa-ew.a.run.app)
 
 Demo video: [03:17 — Autonomous Maintenance with Gemini 3.5, Google ADK & Evidence Gates](https://youtu.be/W3wTHvAmYUU)
 
 License: [MIT](LICENSE)
+
+The name **03:17** represents the moment an unattended maintenance window stops following the runbook—the hour when no sysadmin wants to be awake. The system is designed to handle that deviation with evidence, rollback, and a complete audit trail.
 
 ## The problem
 
@@ -296,7 +302,7 @@ Use [CAPTURE_CHECKLIST.md](docs/CAPTURE_CHECKLIST.md) for the exact product and 
 - Uses no OpenAI model at application runtime.
 - Contains no employer names, private infrastructure, credentials, tickets, logs, or proprietary data.
 
-Cloud-dependent claims are deliberately marked unverified until a real deployment is captured.
+Cloud-dependent claims are backed by the verified production run and captures documented in [CLOUD_PROOF.md](docs/CLOUD_PROOF.md).
 
 ## AI development disclosure and reused work
 
@@ -304,4 +310,4 @@ Codex/GPT-5.6 assisted with development. Gemini is the submitted application's r
 
 ## License
 
-Add a human-selected open-source license before final Devpost submission.
+Released under the [MIT License](LICENSE).

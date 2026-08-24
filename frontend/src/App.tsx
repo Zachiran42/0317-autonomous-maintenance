@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Activity, AlertTriangle, Check, CheckCircle2, ChevronRight, Clock3,
   Database, GitBranch, Play, RefreshCw, RotateCcw, Server, ShieldCheck,
@@ -75,7 +75,7 @@ export function App() {
   const gate = useMemo(() => selected?.gate_decisions.find(item => item.gate === 'database_change') || selected?.gate_decisions.at(-1), [selected])
   const progress = selected?.plan.length ? Math.round(selected.plan.filter(step => ['completed', 'rolled_back', 'deferred'].includes(step.status)).length / selected.plan.length * 100) : 0
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     try {
       const [topologyData, runData, configData] = await Promise.all([
         fetchJson<Topology>('/api/topology'), fetchJson<Run[]>('/api/maintenance'), fetchJson<Config>('/api/config'),
@@ -88,13 +88,16 @@ export function App() {
       } else setEvents([])
       setError('')
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to reach API') }
-  }
+  }, [selectedId, showHistory])
 
   useEffect(() => {
-    void refresh()
-    const timer = setInterval(() => void refresh(), 800)
-    return () => clearInterval(timer)
-  }, [selectedId, showHistory])
+    const initialRefresh = window.setTimeout(() => void refresh(), 0)
+    const timer = window.setInterval(() => void refresh(), 800)
+    return () => {
+      window.clearTimeout(initialRefresh)
+      window.clearInterval(timer)
+    }
+  }, [refresh])
 
   const start = async () => {
     setBusy(true)

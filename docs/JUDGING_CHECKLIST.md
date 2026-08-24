@@ -37,7 +37,7 @@
 - [x] Final renamed Docker image and smoke test pass.
 - [x] Cloud Run deployment works on the public URL.
 - [x] Firestore, Pub/Sub, Vertex, and Cloud Run execution evidence is recorded.
-- [ ] Complete two rehearsals and record a sub-four-minute video.
+- [x] Publish a captioned 2:38 demonstration with visible Google Cloud proof.
 
 ## Compliance and hygiene
 
@@ -46,6 +46,6 @@
 - [x] No employer names, real hosts, private logs, credentials, or proprietary data.
 - [x] AI development disclosure and reuse disclosure included.
 - [x] Cloud-dependent claims are backed by a recorded production run.
-- [ ] Add a license.
-- [ ] Verify official deadline/rules on submission day.
+- [x] Add an MIT license.
+- [x] Verify official deadline/rules on submission day (2026-08-24).
 - [ ] Add multimodal ingestion only after every core proof item passes.

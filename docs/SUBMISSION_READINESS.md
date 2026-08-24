@@ -38,8 +38,8 @@ Submitted project: https://devpost.com/software/03-17-autonomous-maintenance
 
 ## Optional scoring opportunities
 
-- [ ] Publish a public technical article and state that it was created for the All Things Agentic Hackathon.
-- [ ] Publish a social post with `#AllThingsAgentic Hackathon`.
+- [ ] Publish the ready-to-use technical article from `PROMOTION_KIT.md` and add its public URL to Devpost.
+- [ ] Publish the ready-to-use social post from `PROMOTION_KIT.md` with `#AllThingsAgenticHackathon` and add its public URL to Devpost.
 - [ ] Integrate an additional eligible Google AI model only if it strengthens the project without risking the stable submission.
 
 ## Official sources
