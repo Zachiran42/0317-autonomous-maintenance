@@ -257,14 +257,15 @@ The product is engineered for one unedited run:
 7. Show the report, Firestore records, Pub/Sub delivery, Cloud Run service, and Vertex AI logs.
 
 See [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
+Use [CAPTURE_CHECKLIST.md](docs/CAPTURE_CHECKLIST.md) for the exact product and Google Cloud screenshots required for submission.
 
 ## Known limitations
 
 - The infrastructure is synthetic and cannot affect an employer or real production system.
 - The process-local simulator is intentionally small; Firestore persists workflow/audit state, but simulator state itself should move to a transactional persistent adapter for multi-instance production use.
-- Real Vertex AI, Firestore, Pub/Sub, and Cloud Run proof remains deployment-dependent until explicitly verified in the submitter's billed project.
+- Real Vertex AI, Firestore, Pub/Sub, and Cloud Run execution is documented in [CLOUD_PROOF.md](docs/CLOUD_PROOF.md).
 - Pub/Sub push authentication and transactional run claiming are documented production-hardening items.
-- PDF/image change-request ingestion is deferred until the core cloud deployment is verified.
+- PDF/image change-request ingestion is deferred until the core submission proof and video are complete.
 
 ## Hackathon compliance
 

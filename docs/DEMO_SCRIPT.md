@@ -1,80 +1,104 @@
 # Four-Minute Demo Script
 
-Target: **3:55**, one unedited golden run. Preload the 03:17 Cloud Run URL plus Cloud Run, Firestore, Pub/Sub, and Logs Explorer tabs. Reset the synthetic environment before recording.
+Target runtime: **3:42**, leaving an 18-second safety margin. Record at 1080p with the browser zoom set so the topology, Evidence Gate, timeline, and final report remain legible. Use the deployed Cloud Run service and preload every proof tab before recording.
 
-## 0:00–0:20 — Hook
+## Before recording
 
-**Show:** 03:17 command center, healthy topology, approved request.
+1. Close email, billing, credential, and unrelated project tabs.
+2. Preload the public dashboard, architecture diagram, Firestore, Pub/Sub, Cloud Run, Logs Explorer, and Vertex AI proof.
+3. Filter cloud screens to project `autonomous-maintenance-0317` and the golden maintenance ID.
+4. Reset the synthetic environment before the recorded take.
+5. Confirm both web nodes show version `1.0.0`, every node is healthy, and the footer shows `adk planner / firestore state`.
+6. Start recording only after all tabs have finished loading.
 
-“I'm a systems administrator. Maintenance windows happen when everyone else is asleep. Automation handles the easy path, but when reality deviates from the runbook, somebody still has to stay awake.”
+## 0:00-0:20 — The problem
 
-“03:17 closes that gap.”
+**On screen:** Public 03:17 dashboard, hero and healthy topology.
 
-## 0:20–0:40 — Concept
+**Say:**
 
-**Show:** README architecture diagram, then Evidence Gate panel.
+“Maintenance windows happen while everyone else is asleep. Traditional automation follows the runbook, but when a functional check fails, an administrator still has to investigate, decide, and recover.”
 
-“Gemini reasons and replans through Google ADK. Deterministic Evidence Gates authorize every meaningful action. Every action is verified, and failed changes are reversible.”
+“03:17 handles that deviation autonomously.”
 
-## 0:40–2:45 — Live autonomous execution
+## 0:20-0:42 — The safety model
 
-**Show:** Click **Start autonomous maintenance** once. Do not interact again.
+**On screen:** Architecture diagram, then return to the Evidence Gate panel.
 
-Narrate only observable state:
+**Say:**
 
-- “The approved change request enters through Pub/Sub.”
-- “Gemini discovers topology and runbooks, then submits a structured rolling plan.”
-- “Pre-flight proves health, capacity, approval, and backup evidence.”
-- “WEB01 drains. WEB02 carries traffic.”
-- “A rollback point is captured before the update.”
-- “WEB01 updates, restarts, passes health and synthetic verification, then returns to the pool.”
-- “The plan advances to WEB02.”
-- “WEB02 drains, updates, and restarts—but its functional test fails.”
-- “The error rate is 24%, above the 5% threshold. The agent gathers logs and metrics.”
-- “Gemini replans. The rollback gate confirms this maintenance owns the change and has verified rollback state.”
-- “WEB02 returns to version 1.0.0, healthy and back in the pool. Rollback verification passes.”
+“Gemini 3.5 Flash reasons and replans through Google ADK. It never receives unrestricted execution authority. Deterministic Evidence Gates validate every meaningful action, while Pub/Sub triggers the workflow and Firestore preserves the audit trail.”
 
-Point to the topology node states and timeline rather than clicking around.
+“Gemini proposes. Evidence authorizes.”
 
-## 2:45–3:15 — Database Evidence Gate
+## 0:42-2:35 — One autonomous execution
 
-**Show:** Database Evidence Gate panel.
+**On screen:** Click **Start autonomous maintenance** exactly once. Do not interact again. Follow the topology, live plan, Evidence Gate, and activity timeline with the pointer.
 
-“The approved request also includes database maintenance. Backup and database health pass. WEB01 is on the target version. But WEB02 is healthy on the previous version, so target-version redundancy fails.”
+**Say as each state appears:**
 
-“The gate blocks the action. Gemini receives the evidence, replans, and safely defers database maintenance. The database remains unchanged.”
+“This is one approved maintenance request. Pub/Sub delivers it to the Cloud Run worker.”
 
-## 3:15–3:35 — Audit report
+“The agent discovers topology, health, capacity, runbooks, and rollback requirements. Gemini returns a structured rolling plan.”
 
-**Show:** Final outcome panel, then Firestore Data.
+“Pre-flight evidence passes. WEB01 drains while WEB02 preserves service availability. A rollback point is captured before the change.”
 
-“The final report records the original request, plan, dependency graph, evidence, actions, verification, rollback, blocked operation, final topology, short decision summaries, and follow-up.”
+“WEB01 updates to version 1.1.0, restarts, passes health and synthetic verification, and safely returns to the load balancer.”
 
-Open `maintenance_runs`, `maintenance_events`, and `action_executions`. Show the shared maintenance ID and action IDs. Do not show credentials or unrelated project data.
+“Now WEB02 drains and updates. Readiness succeeds, but its functional transaction fails: the observed error rate is 24 percent, above the allowed 5 percent.”
 
-## 3:35–3:50 — Google Cloud proof
+“The agent collects logs and metrics. Gemini replans, and the rollback gate proves that this run owns a valid recovery point.”
 
-Show preloaded screens quickly:
+“WEB02 returns to version 1.0.0, becomes healthy, rejoins the load balancer, and passes rollback verification. No human intervened, and availability remained preserved.”
 
-1. **Cloud Run → autonomous-maintenance-0317:** green revision, service URL, min instances 0, max 1.
-2. **Logs Explorer:** structured event with maintenance ID and a Gemini planning/replanning summary.
-3. **Pub/Sub → maintenance-worker:** delivery activity and `/api/events/pubsub` endpoint.
-4. **Vertex AI monitoring/logs:** visible `gemini-3.5-flash` request evidence.
+## 2:35-2:58 — Safe refusal
 
-Do not claim Vertex proof unless the model/request is visible.
+**On screen:** Keep the database Evidence Gate visible, especially the failed target-version requirements.
 
-## 3:50–4:00 — Finish
+**Say:**
 
-“03:17 doesn't automate the happy path. It handles what happens when the happy path breaks.”
+“The request also includes database maintenance. Backup and database health pass, but WEB02 is now healthy on its previous version. Target-version redundancy is therefore false.”
 
-“Sleep through the maintenance window.”
+“The deterministic gate blocks the database action. Gemini receives that evidence, replans, and safely defers the change. The database remains untouched.”
 
-## Recording checklist
+## 2:58-3:18 — Outcome and auditability
 
-- [ ] Production footer shows `adk planner / firestore state`.
-- [ ] All nodes start healthy and both web versions start at 1.0.0.
-- [ ] Demo pacing shows every lifecycle state clearly.
-- [ ] WEB02 rollback and database blocked gate are legible at 1080p.
-- [ ] Firestore, Cloud Run, Pub/Sub, and Vertex proof tabs are prefiltered.
-- [ ] No emails, billing data, credentials, or unrelated project information is visible.
-- [ ] Recording ends before 4:00.
+**On screen:** Final maintenance report and autonomous activity timeline.
+
+**Say:**
+
+“The final result is completed with warnings: WEB01 updated, WEB02 rolled back and verified, and the database deferred by policy. The report records the plan, actions, evidence, verification, rollback, final topology, and follow-up—with zero manual intervention.”
+
+## 3:18-3:34 — Real Google Cloud proof
+
+**On screen:** Show each preloaded proof for roughly four seconds: Cloud Run, Firestore, Pub/Sub, then Vertex AI or filtered application logs.
+
+**Say:**
+
+“This is the real deployed path: Cloud Run hosts the service, Firestore persists the run and its 112 structured events, Pub/Sub delivers the approved request, and Vertex AI serves Gemini planning and replanning through Google ADK.”
+
+## 3:34-3:42 — Closing line
+
+**On screen:** Return to the final report.
+
+**Say:**
+
+“03:17 does not just automate the happy path. It handles what happens when the happy path breaks.”
+
+## Recording acceptance checklist
+
+- [ ] Final duration is 3:50 or less.
+- [ ] Only one click occurs after the demo begins.
+- [ ] Both starting web versions are `1.0.0`.
+- [ ] WEB01 `UPDATED + VERIFIED` is visible.
+- [ ] WEB02 `ROLLED BACK + VERIFIED` is visible.
+- [ ] Database `DEFERRED BY EVIDENCE POLICY` is visible.
+- [ ] Service availability `PRESERVED` and human interventions `0` are visible.
+- [ ] Footer shows `adk planner / firestore state`.
+- [ ] Cloud proof is readable and belongs to `autonomous-maintenance-0317`.
+- [ ] No email address, billing data, credential, unrelated project, or private log is visible.
+- [ ] Narration describes observable decisions without claiming private chain-of-thought.
+
+## If the live run is too slow
+
+Do not click twice or edit the result. Pause narration briefly while the timeline advances. If the run cannot finish before 3:05, stop the take, reset after obtaining any required cost approval, and record again. Never splice together outcomes from different maintenance IDs while presenting them as one run.

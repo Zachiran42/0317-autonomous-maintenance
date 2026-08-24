@@ -1,6 +1,6 @@
 # Devpost Submission Draft
 
-> Local implementation, tests, frontend build, and Docker validation must be distinguished from cloud verification. Do not remove `[VERIFY AFTER DEPLOYMENT]` markers without visible evidence.
+> Local validation and real cloud execution are documented separately. See `CLOUD_PROOF.md` for the verified production run and retain only claims supported by visible submission evidence.
 
 ## Inspiration
 
@@ -69,9 +69,9 @@ Gemini 3.5 Flash, Vertex AI, Google Agent Development Kit, Cloud Run, Firestore,
 - [x] Golden workflow passes deterministic local tests.
 - [x] WEB01 state mutation, WEB02 failure/rollback, and DB refusal are covered.
 - [x] Frontend production build passes.
-- [ ] `[VERIFY AFTER DEPLOYMENT]` Public Cloud Run URL responds.
-- [ ] `[VERIFY AFTER DEPLOYMENT]` Gemini structured plan/replan appears in application logs.
-- [ ] `[VERIFY AFTER DEPLOYMENT]` Firestore run/event/action/report records are visible.
-- [ ] `[VERIFY AFTER DEPLOYMENT]` Pub/Sub push delivery is visible.
+- [x] Public Cloud Run URL responds.
+- [x] Gemini structured planning and replanning completed through the deployed ADK runtime.
+- [x] Firestore persisted run, event, action, and report records.
+- [x] Pub/Sub push delivery completed through the deployed subscription.
+- [ ] Capture polished screenshots of the verified cloud evidence.
 - [ ] Add repository URL, demo video, and optional technical article/social links.
-
