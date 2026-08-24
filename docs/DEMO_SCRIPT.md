@@ -2,7 +2,7 @@
 
 > A corrected 2:17 production take is available as `video/0317-demo-silent.mp4`. The 2:37 final cut, `video/0317-devpost-final.mp4`, appends visible Cloud Run, Firestore, Pub/Sub, Vertex AI, and correlated-log proof. Its synchronized English subtitle source is `video/0317-devpost-en.srt`; the captions follow only observable UI and cloud evidence from the verified runs.
 
-> The existing video remains valid evidence for Cloud Run revision `00002-962`. The final hardening adds visible dependency IDs, `PLAN REVISED`, measured availability events, and data-driven outcomes. Capture a replacement only after that revision is redeployed and verified; do not retroactively attribute these additions to the existing video.
+> The existing video remains valid historical evidence for Cloud Run revision `00002-962`. The final hardening is deployed and verified on revision `00006-m8m`, adding visible dependency IDs, `PLAN REVISED`, measured availability events, model-resilience fallback, and data-driven outcomes. Capture a replacement to show those additions; do not retroactively attribute them to the existing video.
 
 Target runtime: **3:42**, leaving an 18-second safety margin. Record at 1080p with the browser zoom set so the topology, Evidence Gate, timeline, and final report remain legible. Use the deployed Cloud Run service and preload every proof tab before recording.
 
@@ -81,7 +81,7 @@ Target runtime: **3:42**, leaving an 18-second safety margin. Record at 1080p wi
 
 **Say:**
 
-“This is the real deployed path: Cloud Run hosts the service, Firestore persists the run and its 112 structured events, Pub/Sub delivers the approved request, and Vertex AI serves Gemini planning and replanning through Google ADK.”
+“This is the real deployed path: Cloud Run hosts the service, Firestore persists the run and its 152 structured events, Pub/Sub delivers the approved request, and Vertex AI serves Gemini planning and replanning through Google ADK. Deterministic validation remains authoritative when a model proposal is invalid.”
 
 ## 3:34-3:42 — Closing line
 

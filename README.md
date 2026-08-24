@@ -306,7 +306,7 @@ Use [CAPTURE_CHECKLIST.md](docs/CAPTURE_CHECKLIST.md) for the exact product and 
 - Uses no OpenAI model at application runtime.
 - Contains no employer names, private infrastructure, credentials, tickets, logs, or proprietary data.
 
-Cloud-dependent claims for revision `00002-962` are backed by the production run and captures in [CLOUD_PROOF.md](docs/CLOUD_PROOF.md). New dependency-aware hardening claims remain explicitly local/CI evidence until redeployment.
+Cloud-dependent claims for the final hardened revision `00006-m8m` and both production scenarios are backed by the API and Firestore evidence in [CLOUD_PROOF.md](docs/CLOUD_PROOF.md). The submitted video remains historical evidence from revision `00002-962`; the proof document keeps that boundary explicit.
 
 ## AI development disclosure and reused work
 
