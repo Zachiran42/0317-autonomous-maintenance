@@ -4,14 +4,14 @@ Verified on 2026-08-24 in project `autonomous-maintenance-0317`.
 
 ## Evidence boundary
 
-This document proves revision `autonomous-maintenance-0317-00002-962` and its recorded run only. The later dependency-aware validator/scheduler, structured executable replans, measured availability events, second simulator scenario, and data-driven outcome panel are verified by local tests and GitHub CI. They are **not yet claimed as deployed production evidence** until a new revision and run are explicitly recorded here.
+This document proves revision `autonomous-maintenance-0317-00002-962` and its recorded run only. A read-only audit on 2026-08-24 found current traffic on revision `autonomous-maintenance-0317-00003-f4f`, created at 12:02 UTC before this hardening pass; this pass did not deploy or attribute new evidence to it. The later dependency-aware validator/scheduler, structured executable replans, measured availability events, second simulator scenario, and data-driven outcome panel are verified by local tests and GitHub CI. They are **not yet claimed as deployed production evidence** until a new revision and run are explicitly recorded here.
 
 ## Deployment
 
 - Public service: <https://autonomous-maintenance-0317-iywxkz3msa-ew.a.run.app>
 - Cloud Run region: `europe-west1`
 - Verified revision: `autonomous-maintenance-0317-00002-962`
-- Traffic: 100% to the verified revision
+- Recorded proof traffic: 100% to revision `00002-962`; current pre-hardening traffic is 100% to `00003-f4f`
 - Scaling: zero minimum instances, one maximum instance
 - Firestore: Native mode, default database, `eur3`, free tier
 - Pub/Sub topic: `maintenance-events`
