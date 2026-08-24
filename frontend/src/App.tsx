@@ -15,15 +15,15 @@ type Node = {
 type Topology = { nodes: Node[]; edges: { source: string; target: string }[] }
 type Evidence = { key: string; label: string; passed: boolean; observed: unknown; required: unknown }
 type Gate = { gate: string; target: string; outcome: 'pass' | 'fail'; summary: string; evidence: Evidence[] }
-type Step = { id: string; order: number; target: string; action: string; objective: string; status: string; decision_summary?: string }
+type Step = { id: string; order: number; target: string; action: string; objective: string; status: string; depends_on: string[]; decision_summary?: string }
 type Run = {
   id: string; request: string; status: string; created_at: string; started_at?: string;
   completed_at?: string; plan: Step[]; gate_decisions: Gate[]; human_interventions: number;
-  availability_preserved: boolean; report?: Record<string, unknown>;
+  availability_preserved: boolean; availability_checks: number; report?: Record<string, unknown>;
 }
 type Event = {
   id: string; timestamp: string; event_type: string; target?: string; summary: string;
-  status: string; tool?: string; evidence: Record<string, unknown>;
+  status: string; actor?: string; tool?: string; evidence: Record<string, unknown>;
 }
 type Config = { agent_runtime: string; persistence_backend: string; event_backend: string; model: string }
 
@@ -46,6 +46,26 @@ const stepIcon = (status: string) => {
   if (status === 'deferred' || status === 'blocked') return <X size={14}/>
   if (status === 'in_progress') return <RefreshCw size={14}/>
   return <ChevronRight size={14}/>
+}
+
+const eventCategory = (event: Event) => {
+  if (event.event_type === 'plan' || event.event_type === 'plan_revised') return 'AGENT'
+  if (event.event_type === 'availability_check' || event.event_type === 'verification') return 'VERIFY'
+  if (event.event_type === 'evidence_gate' || event.tool === 'evaluate_evidence') return 'POLICY'
+  if (event.event_type === 'rollback' || ['drain_node', 'apply_maintenance', 'rollback_change'].includes(event.tool || '')) return 'ACTION'
+  if (event.tool) return 'TOOL'
+  return (event.actor || 'SYSTEM').toUpperCase()
+}
+
+const outcomeFor = (step: Step) => {
+  if (step.status === 'completed' && step.action === 'rolling_update') return { tone: 'success', label: 'UPDATED + VERIFIED' }
+  if (step.status === 'completed' && step.action === 'database_maintenance') return { tone: 'success', label: 'MAINTENANCE COMPLETED' }
+  if (step.status === 'rolled_back') return { tone: 'rollback', label: 'ROLLED BACK + VERIFIED' }
+  if (step.status === 'deferred') return { tone: 'blocked', label: 'DEFERRED BY EVIDENCE POLICY' }
+  if (step.status === 'blocked') return { tone: 'blocked', label: 'BLOCKED BY EVIDENCE POLICY' }
+  if (step.status === 'failed') return { tone: 'blocked', label: 'FAILED / ESCALATED' }
+  if (step.status === 'in_progress') return { tone: 'pending', label: 'IN PROGRESS' }
+  return { tone: 'pending', label: 'PENDING' }
 }
 
 function NodeCard({ node }: { node?: Node }) {
@@ -74,6 +94,17 @@ export function App() {
   const nodes = useMemo(() => Object.fromEntries(topology.nodes.map(node => [node.id, node])), [topology])
   const gate = useMemo(() => selected?.gate_decisions.find(item => item.gate === 'database_change') || selected?.gate_decisions.at(-1), [selected])
   const progress = selected?.plan.length ? Math.round(selected.plan.filter(step => ['completed', 'rolled_back', 'deferred'].includes(step.status)).length / selected.plan.length * 100) : 0
+  const latestRevision = useMemo(
+    () => [...events].reverse().find(event => event.event_type === 'plan_revised'),
+    [events],
+  )
+  const outcomeSteps = selected?.plan.filter(
+    step => !['create_report', 'rollback'].includes(step.action),
+  ) || []
+  const reportAvailability = selected?.report?.service_availability_preserved
+  const availabilityPreserved = typeof reportAvailability === 'boolean'
+    ? reportAvailability
+    : selected?.availability_preserved !== false
 
   const refresh = useCallback(async () => {
     try {
@@ -139,13 +170,14 @@ export function App() {
     <section className="command-grid">
       <aside className="plan-panel panel">
         <div className="panel-head"><div><p className="eyebrow">LIVE PLAN</p><h2>Execution strategy</h2></div><Zap size={17}/></div>
+        {latestRevision && <div className="plan-revision"><strong>PLAN REVISED</strong><span>{latestRevision.summary}</span></div>}
         <div className="plan-list">{!selected && <div className="empty"><Clock3/><p>Awaiting change window</p></div>}{selected?.plan.map(step => <div className={`plan-step ${step.status}`} key={step.id}>
-          <span className="step-status">{stepIcon(step.status)}</span><div><strong>{step.target.toUpperCase()}</strong><p>{step.objective}</p>{step.decision_summary && <small>{step.decision_summary}</small>}</div><span className="step-label">{step.status.replace('_', ' ')}</span>
+          <span className="step-status">{stepIcon(step.status)}</span><div><strong>{step.target.toUpperCase()} · {step.action.replaceAll('_', ' ')}</strong><p>{step.objective}</p>{step.depends_on.length > 0 && <small>Depends on: {step.depends_on.join(', ')}</small>}{step.decision_summary && <small>{step.decision_summary}</small>}</div><span className="step-label">{step.status.replace('_', ' ')}</span>
         </div>)}</div>
       </aside>
 
       <section className="topology-panel panel">
-        <div className="panel-head"><div><p className="eyebrow">LIVE INFRASTRUCTURE</p><h2>Maintenance topology</h2></div><span className="availability"><ShieldCheck size={14}/> Availability {selected?.availability_preserved === false ? 'at risk' : 'preserved'}</span></div>
+        <div className="panel-head"><div><p className="eyebrow">LIVE INFRASTRUCTURE</p><h2>Maintenance topology</h2></div><span className="availability"><ShieldCheck size={14}/> Availability {availabilityPreserved ? 'preserved' : 'violated'}</span></div>
         <div className="topology">
           <div className="topo-row one"><NodeCard node={nodes['load-balancer']}/></div>
           <div className="connector fork"/>
@@ -170,17 +202,15 @@ export function App() {
     <section className="lower-grid">
       <section className="timeline-panel panel"><div className="panel-head"><div><p className="eyebrow">PROOF OF ACTION</p><h2>Autonomous activity</h2></div><Activity size={17}/></div>
         <div className="timeline">{events.length === 0 && <div className="empty"><Activity/><p>No maintenance activity yet</p></div>}{events.map((event, index) => <div className="timeline-event" key={event.id}>
-          <div className="rail"><span className={event.status}/>{index < events.length - 1 && <i/>}</div><time>{new Date(event.timestamp).toLocaleTimeString([], {hour12:false})}</time><div><strong>{event.summary}</strong><p>{event.tool ? `TOOL · ${event.tool}` : event.event_type.replace('_', ' ')}{event.target ? ` · ${event.target.toUpperCase()}` : ''}</p></div>
+          <div className="rail"><span className={event.status}/>{index < events.length - 1 && <i/>}</div><time>{new Date(event.timestamp).toLocaleTimeString([], {hour12:false})}</time><div><strong>{event.summary}</strong><p>{eventCategory(event)} · {(event.tool || event.event_type).replaceAll('_', ' ')}{event.target ? ` · ${event.target.toUpperCase()}` : ''}</p></div>
         </div>)}</div>
       </section>
 
       <aside className="outcome-panel panel"><div className="panel-head"><div><p className="eyebrow">WINDOW OUTCOME</p><h2>Final maintenance report</h2></div><CheckCircle2 size={18}/></div>
         {!selected?.report ? <div className="empty"><Clock3/><p>Report generated at completion</p></div> : <div className="outcomes">
-          <div className="outcome success"><CheckCircle2/><span><small>WEB01</small><strong>UPDATED + VERIFIED</strong></span></div>
-          <div className="outcome rollback"><Undo2/><span><small>WEB02</small><strong>ROLLED BACK + VERIFIED</strong></span></div>
-          <div className="outcome blocked"><AlertTriangle/><span><small>DATABASE</small><strong>DEFERRED BY EVIDENCE POLICY</strong></span></div>
-          <div className="outcome availability-row"><ShieldCheck/><span><small>SERVICE AVAILABILITY</small><strong>PRESERVED</strong></span></div>
-          <p className="follow-up">Full audit report persisted · Manual intervention during window: 0</p>
+          {outcomeSteps.map(step => { const outcome = outcomeFor(step); return <div className={`outcome ${outcome.tone}`} key={step.id}>{outcome.tone === 'success' ? <CheckCircle2/> : outcome.tone === 'rollback' ? <Undo2/> : <AlertTriangle/>}<span><small>{step.target.toUpperCase()}</small><strong>{outcome.label}</strong></span></div> })}
+          <div className={`outcome availability-row ${availabilityPreserved ? '' : 'violated'}`}><ShieldCheck/><span><small>SERVICE AVAILABILITY</small><strong>{availabilityPreserved ? 'PRESERVED THROUGHOUT' : 'VIOLATED'}</strong></span></div>
+          <p className="follow-up">Full audit report persisted · {selected.availability_checks} measured availability checks · Manual interventions during execution: {selected.human_interventions}</p>
         </div>}
       </aside>
     </section>
