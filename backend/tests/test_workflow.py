@@ -39,6 +39,18 @@ def test_dependency_discovery(runtime):
     assert all(isinstance(edge, dict) for edge in topology["edges"])
 
 
+def test_planner_read_tools_return_recoverable_unknown_target(runtime):
+    run = new_run(runtime)
+    tools = MaintenanceTools(runtime.simulator, runtime.repository, runtime.gate).bind(run.id)
+
+    for reader in (tools.get_service_health, tools.get_metrics, tools.get_recent_logs):
+        result = reader("report")
+        assert result["available"] is False
+        assert result["target"] == "report"
+        assert "web02" in result["allowed_targets"]
+        assert "Unknown infrastructure node" in result["error"]
+
+
 @pytest.mark.asyncio
 async def test_structured_plan_creation(runtime):
     result = await completed_run(runtime)

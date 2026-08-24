@@ -240,7 +240,7 @@ cd frontend && npm ci && npm run build
 docker build -t autonomous-maintenance-0317 .
 ```
 
-The 19-test suite covers request ingestion, dependency discovery, structured planning, allowed and denied gates, WEB01 success, WEB02 failure, rollback, rollback verification, DB refusal, replanning, idempotency, persistence, invalid state transitions, forbidden actions, backend endpoints, duplicate events, and the complete golden scenario. Unit tests mock model planning with a deterministic planner and consume no tokens.
+The 20-test suite covers request ingestion, dependency discovery, structured planning, allowed and denied gates, WEB01 success, WEB02 failure, rollback, rollback verification, DB refusal, replanning, recoverable invalid planner reads, idempotency, persistence, invalid state transitions, forbidden actions, backend endpoints, duplicate events, and the complete golden scenario. Unit tests mock model planning with a deterministic planner and consume no tokens.
 
 ## Safety and resilience
 

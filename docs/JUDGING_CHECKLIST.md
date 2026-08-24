@@ -33,7 +33,7 @@
 - [x] Plan visibly shows completed, rolled-back, and deferred steps.
 - [x] Evidence panel shows individual machine facts and the blocking decision.
 - [x] Final report gives a concise submission-ready outcome.
-- [x] Nineteen backend tests and frontend production build pass.
+- [x] Twenty backend tests and frontend production build pass.
 - [x] Final renamed Docker image and smoke test pass.
 - [x] Cloud Run deployment works on the public URL.
 - [x] Firestore, Pub/Sub, Vertex, and Cloud Run execution evidence is recorded.

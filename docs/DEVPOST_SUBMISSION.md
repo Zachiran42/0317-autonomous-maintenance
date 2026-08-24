@@ -46,7 +46,7 @@ The third challenge was showing useful agent activity without exposing private r
 - Gemini-driven structured planning/replanning with deterministic action authority.
 - Idempotent tools and duplicate event protection.
 - A signature Evidence Gate UI that explains why the system did—or did not—act.
-- Nineteen deterministic tests covering the entire golden scenario and safety boundaries.
+- Twenty deterministic tests covering the entire golden scenario, recoverable planner-read errors, and safety boundaries.
 
 ## What we learned
 

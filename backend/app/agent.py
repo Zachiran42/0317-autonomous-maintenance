@@ -97,7 +97,9 @@ class AdkPlanner(Planner):
             "changes. Never expose private reasoning. Submit concise observable steps with exactly "
             "these action names when applicable: rolling_update, database_maintenance, create_report. "
             "Targets must be web01, web02, database, or report. Call submit_maintenance_plan exactly "
-            "once. A failed verification requires rollback and reevaluation of later steps."
+            "once. Read node health, metrics, or logs only for load-balancer, web01, web02, worker, "
+            "or database; report is a workflow target, not an infrastructure node. A failed "
+            "verification requires rollback and reevaluation of later steps."
         )
         agent = Agent(
             name="maintenance_planner",

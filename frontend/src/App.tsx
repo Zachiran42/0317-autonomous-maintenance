@@ -62,11 +62,15 @@ export function App() {
   const [topology, setTopology] = useState<Topology>({ nodes: [], edges: [] })
   const [runs, setRuns] = useState<Run[]>([])
   const [selectedId, setSelectedId] = useState<string>()
+  const [showHistory, setShowHistory] = useState(true)
   const [events, setEvents] = useState<Event[]>([])
   const [config, setConfig] = useState<Config>()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const selected = useMemo(() => runs.find(run => run.id === selectedId) || runs[0], [runs, selectedId])
+  const selected = useMemo(
+    () => showHistory ? runs.find(run => run.id === selectedId) || runs[0] : undefined,
+    [runs, selectedId, showHistory],
+  )
   const nodes = useMemo(() => Object.fromEntries(topology.nodes.map(node => [node.id, node])), [topology])
   const gate = useMemo(() => selected?.gate_decisions.find(item => item.gate === 'database_change') || selected?.gate_decisions.at(-1), [selected])
   const progress = selected?.plan.length ? Math.round(selected.plan.filter(step => ['completed', 'rolled_back', 'deferred'].includes(step.status)).length / selected.plan.length * 100) : 0
@@ -77,7 +81,7 @@ export function App() {
         fetchJson<Topology>('/api/topology'), fetchJson<Run[]>('/api/maintenance'), fetchJson<Config>('/api/config'),
       ])
       setTopology(topologyData); setRuns(runData); setConfig(configData)
-      const activeId = selectedId || runData[0]?.id
+      const activeId = showHistory ? selectedId || runData[0]?.id : undefined
       if (activeId) {
         setSelectedId(activeId)
         setEvents(await fetchJson<Event[]>(`/api/maintenance/${activeId}/events`))
@@ -90,19 +94,24 @@ export function App() {
     void refresh()
     const timer = setInterval(() => void refresh(), 800)
     return () => clearInterval(timer)
-  }, [selectedId])
+  }, [selectedId, showHistory])
 
   const start = async () => {
     setBusy(true)
     try {
       const run = await fetchJson<Run>('/api/demo/start', { method: 'POST' })
-      setSelectedId(run.id); await refresh()
+      setShowHistory(true); setSelectedId(run.id)
+      setRuns(previous => [run, ...previous.filter(item => item.id !== run.id)])
+      setEvents([])
     } finally { setBusy(false) }
   }
 
   const reset = async () => {
     setBusy(true)
-    try { await fetchJson('/api/demo/reset', { method: 'POST' }); setSelectedId(undefined); await refresh() }
+    try {
+      await fetchJson('/api/demo/reset', { method: 'POST' })
+      setShowHistory(false); setSelectedId(undefined); setEvents([])
+    }
     finally { setBusy(false) }
   }
 

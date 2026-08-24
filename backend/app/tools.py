@@ -30,6 +30,18 @@ class MaintenanceTools:
         self.maintenance_id = maintenance_id
         return self
 
+    def _read_node(self, target: str, reader: Callable[[Any], dict[str, Any]]) -> dict[str, Any]:
+        """Return a recoverable observation when a planner names a non-node target."""
+        try:
+            return reader(self.simulator.get(target))
+        except KeyError as exc:
+            return {
+                "target": target,
+                "available": False,
+                "error": str(exc),
+                "allowed_targets": [node["id"] for node in self.simulator.topology()["nodes"]],
+            }
+
     def _call(
         self,
         name: str,
@@ -127,30 +139,39 @@ class MaintenanceTools:
 
     def get_service_health(self, target: str) -> dict[str, Any]:
         """Read current health and lifecycle state for one infrastructure node."""
-        return self._call("get_service_health", target, lambda: {
-            "target": target,
-            "health": self.simulator.get(target).health,
-            "state": self.simulator.get(target).state,
-            "version": self.simulator.get(target).version,
-            "desired_version": self.simulator.get(target).desired_version,
-            "in_load_balancer": self.simulator.get(target).in_load_balancer,
-        })
+        return self._call("get_service_health", target, lambda: self._read_node(
+            target,
+            lambda node: {
+                "target": target,
+                "available": True,
+                "health": node.health,
+                "state": node.state,
+                "version": node.version,
+                "desired_version": node.desired_version,
+                "in_load_balancer": node.in_load_balancer,
+            },
+        ))
 
     def get_metrics(self, target: str) -> dict[str, Any]:
         """Read CPU, memory, latency, and error-rate evidence for a node."""
-        return self._call("get_metrics", target, lambda: {
-            "target": target,
-            "cpu_percent": self.simulator.get(target).cpu_percent,
-            "memory_percent": self.simulator.get(target).memory_percent,
-            "latency_ms": self.simulator.get(target).latency_ms,
-            "error_rate": self.simulator.get(target).error_rate,
-        })
+        return self._call("get_metrics", target, lambda: self._read_node(
+            target,
+            lambda node: {
+                "target": target,
+                "available": True,
+                "cpu_percent": node.cpu_percent,
+                "memory_percent": node.memory_percent,
+                "latency_ms": node.latency_ms,
+                "error_rate": node.error_rate,
+            },
+        ))
 
     def get_recent_logs(self, target: str) -> dict[str, Any]:
         """Read recent generated logs for a node."""
-        return self._call("get_recent_logs", target, lambda: {
-            "target": target, "logs": self.simulator.get(target).logs[-20:]
-        })
+        return self._call("get_recent_logs", target, lambda: self._read_node(
+            target,
+            lambda node: {"target": target, "available": True, "logs": node.logs[-20:]},
+        ))
 
     def search_runbooks(self, query: str) -> dict[str, Any]:
         """Search generated maintenance runbooks for relevant procedures."""
@@ -289,4 +310,3 @@ class MaintenanceTools:
     def attempt_restricted_action(self, action: str) -> None:
         """Test-only boundary proving restricted/unknown actions fail closed."""
         self.gate.enforce_action(action)
-
