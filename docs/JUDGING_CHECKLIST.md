@@ -22,7 +22,7 @@
 - [x] Firestore, Pub/Sub, and Cloud Run production adapters exist.
 - [x] Structured logs/events correlate maintenance and action IDs.
 - [x] Bounded plan validation retries exist.
-- [ ] Verify real ADK planning/replanning through Vertex AI.
+- [x] Verify real ADK planning/replanning through Vertex AI.
 - [ ] Add Firestore transactional run claiming before multi-instance load tests.
 - [ ] Configure authenticated Pub/Sub push and a dead-letter topic for production hardening.
 
@@ -35,8 +35,8 @@
 - [x] Final report gives a concise submission-ready outcome.
 - [x] Nineteen backend tests and frontend production build pass.
 - [x] Final renamed Docker image and smoke test pass.
-- [ ] Cloud Run deployment works on the public URL.
-- [ ] Firestore, Pub/Sub, Vertex, and Cloud Run proof is captured.
+- [x] Cloud Run deployment works on the public URL.
+- [x] Firestore, Pub/Sub, Vertex, and Cloud Run execution evidence is recorded.
 - [ ] Complete two rehearsals and record a sub-four-minute video.
 
 ## Compliance and hygiene
@@ -45,7 +45,7 @@
 - [x] No private chain-of-thought exposure.
 - [x] No employer names, real hosts, private logs, credentials, or proprietary data.
 - [x] AI development disclosure and reuse disclosure included.
-- [x] Cloud-dependent claims remain marked unverified.
+- [x] Cloud-dependent claims are backed by a recorded production run.
 - [ ] Add a license.
 - [ ] Verify official deadline/rules on submission day.
 - [ ] Add multimodal ingestion only after every core proof item passes.

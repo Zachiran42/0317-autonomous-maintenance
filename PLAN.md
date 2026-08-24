@@ -1,6 +1,6 @@
 # Implementation Plan
 
-Last updated: 2026-08-23
+Last updated: 2026-08-24
 
 ## Pivot: afterAlerte → 03:17
 
@@ -32,20 +32,20 @@ The existing hackathon codebase was audited at commit `1adecd1` before migration
 - [x] Expand to 19 passing backend tests and validate the frontend build.
 - [x] Rewrite README and submission documents; add safety and migration notes.
 - [x] Build and smoke-test the final renamed Docker image.
-- [ ] Verify real Vertex AI, Firestore, Pub/Sub, and Cloud Run execution.
+- [x] Verify real Vertex AI, Firestore, Pub/Sub, and Cloud Run execution.
 - [x] Rename GitHub repository to `0317-autonomous-maintenance` and complete final release checks.
 - [ ] Capture Google Cloud proof and record the four-minute video.
 - [ ] Add multimodal request ingestion only if all core proof is stable.
 
 ## Remaining work ordered by judging impact
 
-1. Final Docker build and local end-to-end smoke test.
-2. Real Google Cloud deployment and Gemini/ADK planning verification.
-3. Firestore/Pub/Sub/Cloud Run proof capture.
-4. Video rehearsal and sub-four-minute recording.
+1. Capture polished Google Cloud screenshots for the submission.
+2. Rehearse and record the sub-four-minute video.
+3. Add credible public problem evidence or anonymized operator interviews.
+4. Add a license and perform the submission-day rules check.
 5. Optional PDF/image change-request extraction.
 
 ## External blockers
 
-- Google Cloud deployment requires explicit approval because the selected project is billed.
+- Further billable Google Cloud operations require explicit cost approval.
 - Devpost media upload and final submission require the submitter's account.
