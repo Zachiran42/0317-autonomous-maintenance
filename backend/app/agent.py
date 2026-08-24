@@ -161,6 +161,20 @@ class AdkPlanner(Planner):
     def __init__(self, model: str) -> None:
         self.model = model
         self.validator = PlanValidator()
+        self.capacity_fallback = LocalPlanner()
+
+    @staticmethod
+    def _is_capacity_error(exc: Exception) -> bool:
+        message = str(exc).upper()
+        return "RESOURCE_EXHAUSTED" in message or "429" in message
+
+    @staticmethod
+    def _fallback_summary(summary: str) -> str:
+        return (
+            "Gemini/ADK was invoked but Vertex AI capacity was temporarily exhausted; "
+            "the deterministic safe planner produced this executable fallback. "
+            f"{summary}"
+        )
 
     async def _run_planner(
         self,
@@ -271,7 +285,12 @@ class AdkPlanner(Planner):
             try:
                 result = await self._run_planner(run, tools, objective, require_steps=True)
                 return result.updated_steps, result.summary
-            except (RuntimeError, ValueError) as exc:
+            except Exception as exc:
+                if self._is_capacity_error(exc):
+                    plan, summary = await self.capacity_fallback.create_plan(run, tools)
+                    return plan, self._fallback_summary(summary)
+                if not isinstance(exc, (RuntimeError, ValueError)):
+                    raise
                 last_error = exc
         raise RuntimeError(f"Gemini plan failed validation after bounded retries: {last_error}")
 
@@ -291,7 +310,13 @@ class AdkPlanner(Planner):
                 return await self._run_planner(
                     run, tools, objective, require_steps=False, replan=True
                 )
-            except (RuntimeError, ValueError) as exc:
+            except Exception as exc:
+                if self._is_capacity_error(exc):
+                    result = await self.capacity_fallback.replan(run, observation, tools)
+                    result.summary = self._fallback_summary(result.summary)
+                    return result
+                if not isinstance(exc, (RuntimeError, ValueError)):
+                    raise
                 last_error = exc
         raise RuntimeError(f"Gemini replan failed validation after bounded retries: {last_error}")
 
