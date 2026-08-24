@@ -26,3 +26,12 @@ def test_duplicate_event_does_not_repeat_maintenance(client):
     assert first.json()["id"] == second.json()["id"]
     assert len(client.get("/api/maintenance").json()) == 1
 
+
+def test_degraded_preflight_scenario_api(client):
+    reset = client.post("/api/demo/reset?scenario=degraded-preflight")
+    assert reset.status_code == 204
+    response = client.post("/api/demo/start")
+    detail = client.get(f"/api/maintenance/{response.json()['id']}").json()
+    assert detail["status"] == "completed_with_warnings"
+    assert detail["actions_executed"] == []
+    assert detail["report"]["service_availability_preserved"] is True

@@ -21,4 +21,3 @@ class PubSubPublisher:
             event_type="maintenance.created",
         )
         return future.result(timeout=15)
-

@@ -13,6 +13,7 @@ from app.config import get_settings
 from app.models import CreateMaintenanceRequest, MaintenanceEvent, MaintenanceRun
 from app.observability import log_event
 from app.runtime import Runtime, build_runtime
+from app.simulator import SimulatorScenario
 
 
 async def process_maintenance(runtime: Runtime, maintenance_id: str) -> None:
@@ -104,12 +105,14 @@ async def create_maintenance(
         processed_event_ids=[event_id],
     )
     current.repository.save_run(run)
-    current.repository.append_event(MaintenanceEvent(
-        maintenance_id=run.id,
-        event_type="request_received",
-        summary="Approved maintenance request received",
-        evidence={"event_id": event_id, "approved": payload.approved},
-    ))
+    current.repository.append_event(
+        MaintenanceEvent(
+            maintenance_id=run.id,
+            event_type="request_received",
+            summary="Approved maintenance request received",
+            evidence={"event_id": event_id, "approved": payload.approved},
+        )
+    )
     if current.publisher:
         current.publisher.publish(run.id, event_id)
     else:
@@ -123,9 +126,12 @@ async def start_golden_demo(request: Request, background: BackgroundTasks):
 
 
 @app.post("/api/demo/reset", status_code=204)
-def reset_demo(request: Request):
+def reset_demo(
+    request: Request,
+    scenario: SimulatorScenario = SimulatorScenario.GOLDEN,
+):
     current = runtime(request)
-    current.simulator.reset()
+    current.simulator.reset(scenario)
     current.repository.clear()
 
 
@@ -152,4 +158,3 @@ if frontend.exists():
     def dashboard_fallback(path: str):
         candidate = frontend / path
         return FileResponse(candidate if candidate.is_file() else frontend / "index.html")
-

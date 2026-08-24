@@ -8,11 +8,14 @@ from app.models import (
     StepStatus,
     TransitionError,
 )
+from app.simulator import SimulatorScenario
 from app.tools import MaintenanceTools
 
 
 def new_run(runtime) -> MaintenanceRun:
-    return runtime.repository.save_run(MaintenanceRun(request="Approved rolling web and database maintenance"))
+    return runtime.repository.save_run(
+        MaintenanceRun(request="Approved rolling web and database maintenance")
+    )
 
 
 async def completed_run(runtime) -> MaintenanceRun:
@@ -54,8 +57,15 @@ def test_planner_read_tools_return_recoverable_unknown_target(runtime):
 @pytest.mark.asyncio
 async def test_structured_plan_creation(runtime):
     result = await completed_run(runtime)
-    assert [step.target for step in result.plan] == ["web01", "web02", "database", "report"]
+    assert [step.target for step in result.plan] == [
+        "web01",
+        "web02",
+        "web02",
+        "database",
+        "report",
+    ]
     assert result.plan[0].action == "rolling_update"
+    assert result.plan[2].action == "rollback"
 
 
 def test_allowed_evidence_gate(runtime):
@@ -70,7 +80,8 @@ async def test_denied_database_evidence_gate(runtime):
     decision = next(gate for gate in result.gate_decisions if gate.gate == "database_change")
     assert decision.outcome == GateOutcome.FAIL
     assert {item.key for item in decision.evidence if not item.passed} >= {
-        "web02_target", "full_redundancy"
+        "web02_target",
+        "full_redundancy",
     }
 
 
@@ -88,7 +99,9 @@ async def test_web01_successful_maintenance(runtime):
 async def test_web02_verification_failure_is_observed(runtime):
     result = await completed_run(runtime)
     events = runtime.repository.list_events(result.id)
-    failed = [event for event in events if event.event_type == "verification" and event.target == "web02"]
+    failed = [
+        event for event in events if event.event_type == "verification" and event.target == "web02"
+    ]
     assert failed and failed[0].status == "failed"
     assert failed[0].evidence["synthetic"]["error_rate"] == 24.0
 
@@ -126,7 +139,88 @@ async def test_replanning_after_gate_rejection(runtime):
     result = await completed_run(runtime)
     assert any("Database maintenance is deferred" in text for text in result.decision_summaries)
     events = runtime.repository.list_events(result.id)
-    assert any(event.event_type == "evidence_gate" and event.status == "blocked" for event in events)
+    assert any(
+        event.event_type == "evidence_gate" and event.status == "blocked" for event in events
+    )
+
+
+@pytest.mark.asyncio
+async def test_structured_replans_change_persisted_plan(runtime):
+    result = await completed_run(runtime)
+    revisions = [
+        event
+        for event in runtime.repository.list_events(result.id)
+        if event.event_type == "plan_revised"
+    ]
+    assert len(revisions) == 2
+    first = revisions[0].evidence
+    assert len(first["updated_plan"]) > len(first["old_plan"])
+    assert any(step["action"] == "rollback" for step in first["updated_plan"])
+    assert revisions[1].evidence["deferred_step_ids"] == ["database-maintenance"]
+    assert next(step for step in result.plan if step.id == "database-maintenance").status == (
+        StepStatus.DEFERRED
+    )
+    assert next(step for step in result.plan if step.id == "final-report").status == (
+        StepStatus.COMPLETED
+    )
+
+
+@pytest.mark.asyncio
+async def test_alternative_web_only_plan_executes_without_database(runtime):
+    run = runtime.repository.save_run(
+        MaintenanceRun(request="Update WEB02 only. Do not perform database maintenance.")
+    )
+    await runtime.agent.run(run.id)
+    result = runtime.repository.get_run(run.id)
+    assert result is not None
+    assert {step.target for step in result.plan} == {"web02", "report"}
+    assert all(step.action != "database_maintenance" for step in result.plan)
+    assert result.status == MaintenanceStatus.COMPLETED_WITH_WARNINGS
+
+
+@pytest.mark.asyncio
+async def test_degraded_preflight_refuses_mutation_and_still_reports(runtime):
+    runtime.simulator.reset(SimulatorScenario.DEGRADED_PREFLIGHT)
+    result = await completed_run(runtime)
+    assert result.status == MaintenanceStatus.COMPLETED_WITH_WARNINGS
+    assert result.actions_executed == []
+    assert result.report is not None
+    assert all(
+        step.status == StepStatus.DEFERRED for step in result.plan if step.action != "create_report"
+    )
+
+
+def test_availability_check_is_measured_and_false_is_sticky(runtime):
+    run = new_run(runtime)
+    baseline = runtime.agent.record_availability(run, "baseline")
+    assert baseline == {
+        "available": True,
+        "healthy_serving_web_nodes": 2,
+        "required_serving_web_nodes": 1,
+        "serving_targets": ["web01", "web02"],
+        "global_error_rate": 0.1,
+    }
+    runtime.simulator.drain_node("web01")
+    runtime.simulator.drain_node("web02")
+    outage = runtime.agent.record_availability(run, "forced outage")
+    assert outage["available"] is False
+    runtime.simulator.reset()
+    runtime.agent.record_availability(run, "recovery")
+    persisted = runtime.repository.get_run(run.id)
+    assert persisted is not None
+    assert persisted.availability_preserved is False
+
+
+@pytest.mark.asyncio
+async def test_availability_events_back_the_golden_report(runtime):
+    result = await completed_run(runtime)
+    events = runtime.repository.list_events(result.id)
+    checks = [event for event in events if event.event_type == "availability_check"]
+    assert checks
+    assert result.availability_checks == len(checks)
+    assert all(event.evidence["available"] for event in checks)
+    assert result.report["availability_checks"] == len(checks)
+    assert result.report["service_availability_preserved"] is True
 
 
 def test_action_idempotency(runtime):
@@ -141,9 +235,9 @@ def test_action_idempotency(runtime):
 
 def test_repository_persistence(runtime):
     run = new_run(runtime)
-    runtime.repository.append_event(MaintenanceEvent(
-        maintenance_id=run.id, event_type="test", summary="persisted"
-    ))
+    runtime.repository.append_event(
+        MaintenanceEvent(maintenance_id=run.id, event_type="test", summary="persisted")
+    )
     assert runtime.repository.get_run(run.id).id == run.id
     assert runtime.repository.list_events(run.id)[0].summary == "persisted"
 

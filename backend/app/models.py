@@ -68,9 +68,11 @@ ALLOWED_TRANSITIONS: dict[MaintenanceStatus, set[MaintenanceStatus]] = {
     MaintenanceStatus.VERIFYING: {
         MaintenanceStatus.EXECUTING,
         MaintenanceStatus.ROLLING_BACK,
+        MaintenanceStatus.REPLANNING,
         MaintenanceStatus.FAILED,
     },
     MaintenanceStatus.ROLLING_BACK: {
+        MaintenanceStatus.EXECUTING,
         MaintenanceStatus.REPLANNING,
         MaintenanceStatus.FAILED,
         MaintenanceStatus.ESCALATED,
@@ -152,12 +154,22 @@ class PlanStep(BaseModel):
     decision_summary: str | None = None
 
 
+class ReplanResult(BaseModel):
+    """Structured changes proposed by the planner; deterministic code applies them."""
+
+    summary: str
+    updated_steps: list[PlanStep] = Field(default_factory=list)
+    removed_step_ids: list[str] = Field(default_factory=list)
+    deferred_step_ids: list[str] = Field(default_factory=list)
+
+
 class MaintenanceEvent(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     maintenance_id: str
     action_id: str | None = None
     timestamp: datetime = Field(default_factory=utcnow)
     event_type: str
+    actor: str = "system"
     target: str | None = None
     summary: str
     status: str = "success"
@@ -196,8 +208,15 @@ class MaintenanceRun(BaseModel):
     blocked_operations: list[dict[str, Any]] = Field(default_factory=list)
     decision_summaries: list[str] = Field(default_factory=list)
     processed_event_ids: list[str] = Field(default_factory=list)
-    human_interventions: int = 0
+    human_interventions: int = Field(
+        default=0,
+        description=(
+            "Human actions recorded after the initially approved request; starting the run is not "
+            "an intervention during autonomous execution."
+        ),
+    )
     availability_preserved: bool = True
+    availability_checks: int = 0
     report: dict[str, Any] | None = None
 
     def transition(self, next_status: MaintenanceStatus) -> None:

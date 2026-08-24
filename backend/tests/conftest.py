@@ -16,4 +16,3 @@ def client(runtime):
     with TestClient(app) as value:
         app.state.runtime = runtime
         yield value
-
