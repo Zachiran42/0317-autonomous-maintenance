@@ -1,0 +1,59 @@
+1
+00:00:00,000 --> 00:00:07,000
+03:17 — Autonomous Maintenance
+
+2
+00:00:07,000 --> 00:00:14,000
+An evidence-gated AI agent for safe, after-hours infrastructure change.
+
+3
+00:00:14,000 --> 00:00:24,000
+The approved request is converted into an ordered execution plan.
+
+4
+00:00:24,000 --> 00:00:34,000
+Every mutating step requires fresh, deterministic pre-flight evidence.
+
+5
+00:00:34,000 --> 00:00:46,000
+WEB01 updates successfully. WEB02 then fails functional verification.
+
+6
+00:00:46,000 --> 00:00:58,000
+The agent stops, gathers evidence, and enters structured replanning.
+
+7
+00:00:58,000 --> 00:01:10,000
+Gemini and Google ADK are invoked — but safety validation remains authoritative.
+
+8
+00:01:10,000 --> 00:01:26,000
+An invalid proposal is rejected. The safe fallback rolls WEB02 back and verifies v1.0.0.
+
+9
+00:01:26,000 --> 00:01:38,000
+The database gate detects that full web redundancy has not been restored.
+
+10
+00:01:38,000 --> 00:01:50,000
+Database maintenance is deferred instead of risking availability.
+
+11
+00:01:50,000 --> 00:02:02,000
+The revised topology remains healthy while the full audit trail is preserved.
+
+12
+00:02:02,000 --> 00:02:12,000
+No human intervention. Twelve measured availability checks.
+
+13
+00:02:12,000 --> 00:02:24,000
+WEB01: updated and verified. WEB02: rolled back and verified.
+
+14
+00:02:24,000 --> 00:02:36,000
+Database: deferred by evidence policy. Service availability: preserved throughout.
+
+15
+00:02:36,000 --> 00:02:42,000
+03:17 — autonomy constrained by evidence.

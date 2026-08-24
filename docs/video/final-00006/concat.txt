@@ -1,0 +1,15 @@
+file '01-ready.png'
+duration 14
+file '03-plan-and-preflight.png'
+duration 20
+file '04-web02-failure-replanning.png'
+duration 24
+file '05-plan-revised-rollback-verified.png'
+duration 28
+file '06-database-gate-blocked.png'
+duration 24
+file '07-final-plan-topology.png'
+duration 22
+file '08-final-outcome-audit.png'
+duration 30
+file '08-final-outcome-audit.png'

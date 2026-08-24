@@ -27,7 +27,7 @@ Official deadline: **2026-08-31 at 5:00 PM PDT** (**2026-09-01 at 02:00 CEST / P
 
 ## Actions requiring the submitter
 
-- [x] Upload `video/0317-devpost-final.mp4` publicly to YouTube: https://youtu.be/W3wTHvAmYUU
+- [x] Upload the final hardened demo to YouTube as unlisted: https://youtu.be/mEU1QCJbvKk
 - [x] Add the public video URL to the Devpost submission.
 - [x] Confirm Devpost registration and eligibility.
 - [x] Paste the prepared English description from `DEVPOST_SUBMISSION.md`.

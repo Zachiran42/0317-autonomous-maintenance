@@ -44,7 +44,7 @@ The project, live demonstration, architecture, and complete source are available
 - Devpost: https://devpost.com/software/03-17-autonomous-maintenance
 - GitHub: https://github.com/Zachiran42/0317-autonomous-maintenance
 - Live application: https://autonomous-maintenance-0317-iywxkz3msa-ew.a.run.app
-- Video: https://youtu.be/W3wTHvAmYUU
+- Video: https://youtu.be/mEU1QCJbvKk
 
 ## Social post
 
@@ -60,7 +60,7 @@ Devpost: https://devpost.com/software/03-17-autonomous-maintenance
 
 GitHub: https://github.com/Zachiran42/0317-autonomous-maintenance
 
-Demo: https://youtu.be/W3wTHvAmYUU
+Demo: https://youtu.be/mEU1QCJbvKk
 
 ## Publication checklist
 

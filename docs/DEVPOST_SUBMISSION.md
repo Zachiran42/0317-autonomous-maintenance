@@ -1,6 +1,6 @@
 # Devpost Submission Draft
 
-Demo video: https://youtu.be/W3wTHvAmYUU
+Demo video: https://youtu.be/mEU1QCJbvKk
 
 > Local validation and real cloud execution are documented separately. `CLOUD_PROOF.md` records the previous verified production revision. The final dependency-aware hardening is validated locally and in CI but must be redeployed before being described as new cloud proof.
 
