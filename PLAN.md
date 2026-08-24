@@ -35,16 +35,15 @@ The existing hackathon codebase was audited at commit `1adecd1` before migration
 - [x] Build and smoke-test the final renamed Docker image.
 - [x] Verify real Vertex AI, Firestore, Pub/Sub, and Cloud Run execution.
 - [x] Rename GitHub repository to `0317-autonomous-maintenance` and complete final release checks.
-- [ ] Capture Google Cloud proof and record the four-minute video.
+- [x] Capture Google Cloud proof and record a sub-four-minute silent demo cut.
 - [ ] Add multimodal request ingestion only if all core proof is stable.
 
 ## Remaining work ordered by judging impact
 
-1. Rehearse and record the sub-four-minute video.
-2. Capture the initial-state hero image during the approved recorded run.
-3. Add credible public problem evidence or anonymized operator interviews.
-4. Add a license and perform the submission-day rules check.
-5. Optional PDF/image change-request extraction.
+1. Add narration/captions and rehearse the final Devpost video.
+2. Add credible public problem evidence or anonymized operator interviews.
+3. Add a license and perform the submission-day rules check.
+4. Optional PDF/image change-request extraction.
 
 ## External blockers
 

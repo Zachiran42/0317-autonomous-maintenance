@@ -4,7 +4,7 @@ Use 16:9 captures, preferably at 1920x1080 and never below 1280x720. Keep the pr
 
 ## Captured evidence
 
-- [ ] P1 initial command center — requires a reset and must wait for explicit cost approval.
+- [x] P1 initial command center — `screenshots/01-command-center.png`.
 - [x] P2 WEB02 functional verification failure — `screenshots/02-verification-failure.png`.
 - [x] P3 verified rollback and replan — `screenshots/03-verified-rollback.png`.
 - [x] P4 blocked database Evidence Gate — `screenshots/04-database-gate-blocked.png`.
@@ -14,6 +14,12 @@ Use 16:9 captures, preferably at 1920x1080 and never below 1280x720. Keep the pr
 - [x] G3 active Pub/Sub push subscription and endpoint — `screenshots/08-pubsub-delivery.png`.
 - [x] G4 structured Cloud Run logs correlated by maintenance ID — `screenshots/10-structured-maintenance-logs.png`.
 - [x] G5 Gemini 3.5 Flash requests through the Vertex AI backend — `screenshots/09-vertex-gemini-proof.png`.
+
+## Recorded demo
+
+- [x] Silent sub-four-minute cut — `video/0317-demo-silent.mp4` (2 min 17 s).
+- [x] Corrected production run `mw-842e8490dd53` completed with warnings: WEB01 updated, WEB02 rolled back and verified, database deferred, availability preserved, zero interventions.
+- [ ] Add narration or captions before the final Devpost upload.
 
 ## Required product captures
 
@@ -68,7 +74,7 @@ Use predictable names before uploading:
 ## Final review
 
 - [x] Every captured image is readable without browser zoom.
-- [x] All product images belong to the verified golden run.
+- [x] Outcome product images belong to a verified golden run; P1 is the clean baseline of the corrected recorded run.
 - [x] The displayed maintenance ID matches the correlated cloud evidence.
 - [x] No billing balance, email, credential, token, request header, or unrelated resource is visible.
 - [x] Images do not expose private chain-of-thought; concise decision summaries are acceptable.
