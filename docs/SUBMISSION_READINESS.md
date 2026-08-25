@@ -19,7 +19,7 @@ Official deadline: **2026-08-31 at 5:00 PM PDT** (**2026-09-01 at 02:00 CEST / P
 - [x] Reproducible local and cloud setup instructions in `README.md`.
 - [x] Architecture diagram.
 - [x] Demonstration video shorter than four minutes.
-- [x] English captions.
+- [x] English on-screen problem statement, value proposition, speed disclosure, and cloud-proof labels.
 - [x] Unedited live execution showing proof of action.
 - [x] Visible Google Cloud deployment proof appended to the final video.
 - [x] Pre-existing work and migration history disclosed in `MIGRATION_NOTES.md` and Git history.
@@ -27,7 +27,7 @@ Official deadline: **2026-08-31 at 5:00 PM PDT** (**2026-09-01 at 02:00 CEST / P
 
 ## Actions requiring the submitter
 
-- [x] Upload the final hardened demo to YouTube as unlisted: https://youtu.be/mEU1QCJbvKk
+- [x] Publish the final continuous live demo publicly on YouTube: https://youtu.be/gvNR-WHC1G0
 - [x] Add the public video URL to the Devpost submission.
 - [x] Confirm Devpost registration and eligibility.
 - [x] Paste the prepared English description from `DEVPOST_SUBMISSION.md`.

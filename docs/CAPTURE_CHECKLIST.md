@@ -22,9 +22,9 @@ Use 16:9 captures, preferably at 1920x1080 and never below 1280x720. Keep the pr
 - [x] English subtitle source — `video/0317-demo-en.srt`.
 - [x] Devpost-ready cut with visible Google Cloud proof — `video/0317-devpost-final.mp4` (2 min 37 s).
 - [x] Final editable English subtitle source — `video/0317-devpost-en.srt`.
-- [x] Final YouTube publication (unlisted) — https://youtu.be/mEU1QCJbvKk
+- [x] Final continuous live demo published publicly on YouTube (1 min 56 s, uniformly shown at 2× speed) — https://youtu.be/gvNR-WHC1G0
 - [x] Corrected production run `mw-842e8490dd53` completed with warnings: WEB01 updated, WEB02 rolled back and verified, database deferred, availability preserved, zero interventions.
-- [ ] Optionally add voice-over before the final Devpost upload.
+- [x] English on-screen explanation retained; voice-over is not required for the silent public demo.
 
 ## Required product captures
 

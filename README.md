@@ -16,7 +16,7 @@ Devpost: [03:17 — Autonomous Maintenance](https://devpost.com/software/03-17-a
 
 Live demo: [autonomous-maintenance-0317](https://autonomous-maintenance-0317-iywxkz3msa-ew.a.run.app)
 
-Final demo video: [03:17 — Autonomous Maintenance | Final Hardened Demo](https://youtu.be/mEU1QCJbvKk)
+Final demo video: [03:17 — Autonomous Maintenance with Gemini 3.5, Google ADK & Evidence Gates](https://youtu.be/gvNR-WHC1G0)
 
 License: [MIT](LICENSE)
 
@@ -100,7 +100,7 @@ Cloud Logging records Gemini 3.5 Flash requests through the Vertex AI backend, w
 
 See [the complete cloud proof](docs/CLOUD_PROOF.md) and [all submission captures](docs/screenshots/).
 
-Watch the [final 2:43 hardened demonstration on YouTube](https://youtu.be/mEU1QCJbvKk), including the verified failure, structured replanning, rollback, downstream evidence refusal, and final audit report. The [final local master](docs/video/0317-final-00006.mp4) and [English subtitle source](docs/video/0317-final-00006-en.srt) are retained alongside the earlier submission masters.
+Watch the [final 1:56 continuous live demonstration on YouTube](https://youtu.be/gvNR-WHC1G0), including the verified failure, structured replanning, rollback, downstream evidence refusal, final audit report, and visible Google Cloud proof. The live execution is shown uniformly at 2× speed and is identified as such on screen.
 
 ## Architecture
 
